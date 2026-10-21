@@ -2,6 +2,8 @@
 // DOM을 건드리지 않는 순수 함수만 둔다. 숫자는 모두 rules.js에서 읽는다.
 (function (root) {
   const Rules = root.Rules || (typeof require === 'function' ? require('./rules.js') : null);
+  const IntroEmbed = root.IntroEmbed || (typeof require === 'function' ? require('./intro-embed.js') : null);
+  const EMBEDDINGS = root.EMBEDDINGS || (typeof require === 'function' ? require('./embeddings.js') : null);
   const { REGION_GROUP, OPTIONS, SCORE_RULES, FILTER_RULES } = Rules;
   const RULE = Object.fromEntries(SCORE_RULES.map((r) => [r.key, r]));
 
@@ -12,6 +14,31 @@
   const ageGap = (me, p) => Math.abs(me.age - p.age);
   const inRange = (v, min, max) => v >= min && v <= max;
   const smokeText = (s) => (s ? '흡연' : '비흡연');
+
+  // 자기소개 임베딩. 내 것은 화면 코드가 계산해 me.introEmbedding에 넣고, 가상 회원 것은 embeddings.js에 있다.
+  // 지금의 소개글로 만든 벡터가 아니면 없는 것으로 본다. 결과: { vec, sentences: [{ text, vec }] } 또는 null
+  function introOf(person) {
+    const text = (person.intro || '').trim();
+    if (!text || !EMBEDDINGS) return null;
+    const own = person.introEmbedding;
+    if (own) return own.model === EMBEDDINGS.model && own.text === text ? own : null;
+    const vec = EMBEDDINGS.vectors[person.id];
+    if (!vec || EMBEDDINGS.fingerprints[person.id] !== IntroEmbed.fingerprint(person.intro)) return null;
+    const texts = IntroEmbed.splitSentences(person.intro);
+    return { vec, sentences: EMBEDDINGS.sentences[person.id].map((v, i) => ({ text: texts[i], vec: v })) };
+  }
+  // 내 소개를 비교할 수 없으면 자기소개 항목을 '안 봄'으로 두고 나머지로 100점을 나눈다.
+  const activeWeights = (me, weights) => (introOf(me) ? weights : { ...(weights || {}), intro: 0 });
+
+  // 근거로 보여 줄, 서로 가장 비슷한 문장 한 쌍
+  function closestSentences(a, b) {
+    let best = null;
+    a.sentences.forEach((x) => b.sentences.forEach((y) => {
+      const sim = IntroEmbed.similarity(x.vec, y.vec, EMBEDDINGS.sentenceMean);
+      if (!best || sim > best.sim) best = { mine: x.text, theirs: y.text, sim };
+    }));
+    return best && best.sim >= Rules.INTRO_RULE.sentenceMin ? best : null;
+  }
 
   // 성적 지향으로 "관심 있는 성별"을 정한다.
   function interestedIn(person) {
@@ -83,6 +110,22 @@
       const detail = shared.length ? `공통 관심사 ${shared.length}개: ${parts.join(', ')}` : '겹치는 관심사 없음';
       return { points: Math.min(points, r.max), detail };
     },
+    // 소개글 전체의 유사도로 점수를 매기고, 가장 닮은 문장 한 쌍을 근거로 붙인다
+    intro(me, prefs, p, r) {
+      const mine = introOf(me);
+      if (!mine) {
+        return { points: 0, detail: (me.intro || '').trim()
+          ? '내 자기소개를 아직 분석하지 못해 이 항목은 빼고 계산했어요' : '내 자기소개가 없어 이 항목은 빼고 계산했어요' };
+      }
+      const theirs = introOf(p);
+      if (!theirs) return { points: 0, detail: '상대 자기소개를 비교할 수 없어요' };
+      const sim = IntroEmbed.similarity(mine.vec, theirs.vec, EMBEDDINGS.mean);
+      const hit = r.steps.find(([min]) => sim >= min);
+      const pair = hit ? closestSentences(mine, theirs) : null;
+      const detail = `${hit ? `자기소개가 ${hit[2]}` : '자기소개에서 닮은 점이 적어요'} (유사도 ${sim.toFixed(2)})` +
+        (pair ? `: 「${pair.theirs}」 ↔ 나 「${pair.mine}」` : '');
+      return { points: hit ? hit[1] : 0, detail, similarity: sim };
+    },
     marriage(me, prefs, p, r) {
       const gap = marriageGap(me.marriage, p.marriage);
       const detail = gap === 0 ? `둘 다 '${p.marriage}'`
@@ -143,7 +186,7 @@
   }
 
   function scoreProfile(me, prefs, p) {
-    const maxes = effectiveMax(prefs.weights);
+    const maxes = effectiveMax(activeWeights(me, prefs.weights));
     const items = SCORE_RULES.map((r) => {
       const base = SCORERS[r.key](me, prefs, p, r); // 기본 점수표 기준 점수
       const max = maxes[r.key];
@@ -270,7 +313,7 @@
     };
   }
 
-  const Matcher = { recommend, applyFilters, scoreProfile, rank, explainWinner, interestedIn, matchResult, effectiveMax };
+  const Matcher = { recommend, applyFilters, scoreProfile, rank, explainWinner, interestedIn, matchResult, effectiveMax, activeWeights, introOf };
   root.Matcher = Matcher;
   if (typeof module === 'object' && module.exports) module.exports = Matcher;
 })(typeof window !== 'undefined' ? window : globalThis);

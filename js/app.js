@@ -204,6 +204,51 @@
 
   function openChat(id) { go({ screen: 'main', tab: 'chat', detailId: null, chatId: id, matchModal: null, chatDraft: '' }); }
 
+  // ---------- 자기소개 분석 (임베딩) ----------
+  // 내 소개글은 브라우저에서 AI 모델로 계산한다. 처음 한 번은 모델 파일을 내려받느라 시간이 걸리고,
+  // 그동안은 자기소개 항목을 빼고 나머지 항목으로 추천한다. 결과는 계정에 저장해 다시 계산하지 않는다.
+  const introJob = { status: 'idle', text: null, error: '' }; // idle | loading | failed
+  function ensureIntroEmbedding() {
+    const { me, account } = state;
+    const text = ((me && me.intro) || '').trim();
+    if (!text || window.Matcher.introOf(me)) return;
+    if (introJob.text === text && introJob.status !== 'idle') return; // 계산 중이거나 실패함 (실패는 '다시 시도'로만)
+    Object.assign(introJob, { status: 'loading', text, error: '' });
+    window.IntroEmbed.embedIntro(text).then((embedding) => {
+      if (introJob.text !== text) return; // 그사이 소개를 고쳤으면 버린다
+      introJob.status = 'idle';
+      if (state.account !== account || ((state.me && state.me.intro) || '').trim() !== text) return;
+      state.me.introEmbedding = embedding;
+      save();
+      toast('자기소개 분석이 끝나 추천 점수에 반영했어요.');
+      if (state.screen === 'main') render();
+    }, (e) => {
+      if (introJob.text !== text) return;
+      Object.assign(introJob, { status: 'failed', error: e.message || String(e) });
+      if (state.screen === 'main') render();
+    });
+  }
+  function retryIntro() {
+    introJob.status = 'idle';
+    ensureIntroEmbedding();
+    render();
+  }
+  // 자기소개 항목이 지금 점수에 빠져 있다면 그 이유와 할 일을 알려 준다
+  function introStatus(returnTab) {
+    const text = (state.me.intro || '').trim();
+    if (text && window.Matcher.introOf(state.me)) return null;
+    if (!text) {
+      return el('p', { class: 'intro-status' }, '자기소개를 쓰면 하루와 데이트 취향이 닮은 분을 더 잘 찾아요.',
+        el('button', { class: 'link', onclick: () => startSignup('intro', returnTab) }, '자기소개 쓰기 ›'));
+    }
+    if (introJob.status === 'failed') {
+      return el('p', { class: 'intro-status failed' }, `자기소개를 분석하지 못해 이 항목은 빼고 추천했어요. (${introJob.error})`,
+        el('button', { class: 'link', onclick: retryIntro }, '다시 시도'));
+    }
+    return el('p', { class: 'intro-status', role: 'status' },
+      '자기소개를 AI로 분석하는 중이에요. 처음 한 번은 모델 파일(약 135MB)을 내려받아 시간이 걸려요. 끝나면 점수에 바로 반영돼요.');
+  }
+
   // ---------- 가입 단계 입력 부품 ----------
   function field(label, control, hint) {
     return el('div', { class: 'field' }, el('label', { class: 'field-label' }, label), control, hint ? el('p', { class: 'field-hint' }, hint) : null);
@@ -211,6 +256,10 @@
   function textInput(obj, key, placeholder, max) {
     return el('input', { type: 'text', value: obj[key] || '', placeholder, maxlength: max || 20,
       oninput: (e) => { obj[key] = e.target.value; } });
+  }
+  function textArea(obj, key, placeholder, max, onChange) {
+    return el('textarea', { placeholder, maxlength: max, rows: 5,
+      oninput: (e) => { obj[key] = e.target.value; if (onChange) onChange(e.target.value); } }, obj[key] || '');
   }
   function numberInput(obj, key, min, max, unit) {
     return el('div', { class: 'num-input' },
@@ -355,6 +404,19 @@
       check: ({ me }) => (!me.interests.length ? '관심사를 1개 이상 골라 주세요.' : null),
     },
     {
+      key: 'intro',
+      title: '나를 소개해\n주세요',
+      sub: '쉬는 날 하는 일, 좋아하는 데이트를 2~3문장으로 써 주세요. AI가 뜻을 읽어 소개글이 닮은 분에게 점수를 더 줘요. 건너뛰어도 돼요.',
+      body: ({ me }) => {
+        const count = el('p', { class: 'count' }, `${(me.intro || '').length}/200자`);
+        return [
+          field('자기소개', textArea(me, 'intro', '예: 주말엔 근교 산에 올라요. 내려와서 맛집 찾아가는 게 낙이에요. 조용한 카페에서 이야기 나누는 데이트를 좋아해요.', 200,
+            (v) => { count.textContent = `${v.length}/200자`; }), '같은 단어가 아니어도 뜻이 비슷하면 알아봐요. 소개글은 이 브라우저 안에서만 분석하고 밖으로 보내지 않아요.'),
+          count,
+        ];
+      },
+    },
+    {
       key: 'ideal',
       title: '어떤 분을\n만나고 싶으세요?',
       body: ({ me, prefs }) => [
@@ -362,7 +424,7 @@
           el('small', null, '기본 정보에서 고른 성별과 성적 지향에 맞춰 자동으로 정해져요.')),
         field('희망 나이', rangeInputs(prefs, 'ageMin', 'ageMax', 19, 60, '세')),
         field('희망 키', rangeInputs(prefs, 'heightMin', 'heightMax', 140, 210, 'cm')),
-        field('끌리는 스타일', chips(prefs.styles, OPTIONS.styles), '고른 스타일이면 외모 점수 7점'),
+        field('끌리는 스타일', chips(prefs.styles, OPTIONS.styles), `고른 스타일이면 외모 점수 ${SCORE_RULES.find((r) => r.key === 'looks').style}점`),
       ],
     },
     {
@@ -387,6 +449,8 @@
   async function finishSignup() {
     const { me, prefs, account } = state.draft;
     me.name = me.name.trim();
+    me.intro = (me.intro || '').trim();
+    if (me.introEmbedding && me.introEmbedding.text !== me.intro) delete me.introEmbedding; // 고친 소개는 다시 분석
     if (prefs.ageMin > prefs.ageMax) [prefs.ageMin, prefs.ageMax] = [prefs.ageMax, prefs.ageMin];
     if (prefs.heightMin > prefs.heightMax) [prefs.heightMin, prefs.heightMax] = [prefs.heightMax, prefs.heightMin];
 
@@ -537,7 +601,8 @@
       el('p', { class: 'sub' }, passed
         ? `${state.me.name}님의 조건을 통과한 ${passed}명 중에서 궁합 점수 순으로 골랐어요.`
         : `${state.me.name}님의 조건을 통과한 분이 아직 없어요.`),
-      el('button', { class: 'link weight-link', onclick: () => openWeights() }, '⚖ 항목별 중요도(가중치) 조절하기 ›'));
+      el('button', { class: 'link weight-link', onclick: () => openWeights() }, '⚖ 항목별 중요도(가중치) 조절하기 ›'),
+      introStatus('home'));
 
     if (!passed) {
       return [head, el('section', { class: 'card empty' },
@@ -675,7 +740,7 @@
 
   // 항목별 중요도 고르기. 고르는 즉시 저장하고 다시 계산한다.
   function weightEditor(result) {
-    const maxes = window.Matcher.effectiveMax(state.prefs.weights);
+    const maxes = window.Matcher.effectiveMax(window.Matcher.activeWeights(state.me, state.prefs.weights));
     const current = (key) => (state.prefs.weights && typeof state.prefs.weights[key] === 'number' ? state.prefs.weights[key] : 1);
     const setWeight = (key, value) => {
       state.prefs.weights = { ...(state.prefs.weights || {}), [key]: value };
@@ -692,7 +757,8 @@
         el('div', { class: 'w-levels', role: 'radiogroup', 'aria-label': `${r.label} 중요도` },
           window.Rules.WEIGHT_LEVELS.map((l) => el('button', { type: 'button', role: 'radio', 'aria-checked': String(current(r.key) === l.value),
             class: current(r.key) === l.value ? 'on' : '', onclick: () => setWeight(r.key, l.value) }, l.label))),
-        el('p', { class: 'w-rule' }, el('b', null, r.rule), ' · ', r.why))),
+        el('p', { class: 'w-rule' }, el('b', null, r.rule), ' · ', r.why),
+        r.key === 'intro' ? introStatus('report') : null)),
       el('div', { class: 'w-foot' },
         el('span', null, '합계 ', el('b', null, Object.values(maxes).reduce((a, b) => a + b, 0)), '점'),
         top ? el('span', null, `지금 1위: ${top.profile.name} ${top.total}점`) : el('span', null, '추천할 분이 없어요'),
@@ -719,13 +785,17 @@
         el('dl', { class: 'info' }, row('성별', me.gender), row('성적 지향', `${me.orientation}${me.orientationPublic ? '' : ' (비공개)'}`), row('종교', me.religion), row('흡연', me.smoker ? '흡연' : '비흡연'),
           row('음주', me.drinking), row('결혼 계획', me.marriage), row('결혼 경험', me.marital), row('스타일', me.style))),
       el('section', { class: 'card' },
+        el('div', { class: 'card-head' }, el('h2', null, '자기소개'), el('button', { class: 'link', onclick: () => startSignup('intro', 'me') }, me.intro ? '수정' : '쓰기')),
+        me.intro ? el('p', { class: 'me-intro' }, me.intro) : null,
+        introStatus('me')),
+      el('section', { class: 'card' },
         el('div', { class: 'card-head' }, el('h2', null, '이상형'), el('button', { class: 'link', onclick: () => startSignup('ideal', 'me') }, '수정')),
         el('dl', { class: 'info' }, row('만나는 성별', window.Matcher.interestedIn(me).join('·')), row('나이', `${prefs.ageMin}~${prefs.ageMax}세`),
           row('키', `${prefs.heightMin}~${prefs.heightMax}cm`), row('스타일', prefs.styles.join(', ') || '상관없음'))),
       el('section', { class: 'card' },
         el('div', { class: 'card-head' }, el('h2', null, '항목별 중요도'), el('button', { class: 'link', onclick: openWeights }, '조절')),
         el('div', { class: 'tags' }, (() => {
-          const maxes = window.Matcher.effectiveMax(prefs.weights);
+          const maxes = window.Matcher.effectiveMax(window.Matcher.activeWeights(me, prefs.weights));
           return SCORE_RULES.map((r) => el('span', { class: `tag ${maxes[r.key] > r.max ? 'shared' : ''}` }, `${r.label} ${maxes[r.key]}점`));
         })())),
       el('section', { class: 'card' },
@@ -876,6 +946,7 @@
 
   function renderMain() {
     if (state.chatId) return renderChat();
+    ensureIntroEmbedding();
     const result = compute();
     if (state.detailId) return renderDetail(result);
     const views = { report: () => renderReport(result), me: renderMe, chat: renderChatList };

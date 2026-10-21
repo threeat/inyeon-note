@@ -1,0 +1,12 @@
+{
+  "name": "inyeon-note",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "embeddings": "node scripts/build-embeddings.mjs"
+  },
+  "devDependencies": {
+    "@huggingface/transformers": "4.3.1"
+  }
+}

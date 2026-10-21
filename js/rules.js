@@ -38,9 +38,16 @@
   // 표시 순서 = 배열 순서. max의 합은 100.
   const SCORE_RULES = [
     {
-      key: 'interests', label: '관심사', max: 40, perItem: 10, perCategoryOnly: 6,
-      rule: '겹치는 관심사 1개당 10점 (최대 40점). 둘 다 세부 취향(장르 등)을 골랐는데 하나도 안 겹치면 6점',
+      key: 'interests', label: '관심사', max: 35, perItem: 10, perCategoryOnly: 6,
+      rule: '겹치는 관심사 1개당 10점 (최대 35점). 둘 다 세부 취향(장르 등)을 골랐는데 하나도 안 겹치면 6점',
       why: '최우선 항목. 공통 관심사가 있어야 대화와 데이트가 생긴다. 같은 영화라도 장르가 다르면 함께 즐기기 어려워 조금 덜 준다.',
+    },
+    {
+      // 유사도 = 자기소개 임베딩에서 평균 벡터를 뺀 코사인 (js/intro-embed.js). 구간은 가상 회원 190쌍의 분포로 정했다:
+      // 0.18 이상은 상위 약 3%, 0.10 이상은 상위 약 10%, 0.03 이상은 상위 약 20%.
+      key: 'intro', label: '자기소개', max: 10, steps: [[0.18, 10, '아주 비슷해요'], [0.10, 6, '꽤 비슷해요'], [0.03, 3, '조금 비슷해요']],
+      rule: '자기소개의 뜻이 아주 비슷하면 10점, 꽤 비슷하면 6점, 조금 비슷하면 3점 (AI 문장 임베딩으로 비교)',
+      why: '같은 단어를 고르지 않아도 좋아하는 하루, 데이트 분위기가 닮은 사람을 찾는다. 짧은 글로 판단하므로 비중은 작게 뒀다.',
     },
     {
       key: 'marriage', label: '결혼관', max: 15, byGap: [15, 7, 0],
@@ -48,9 +55,9 @@
       why: '관계의 방향이 맞는지를 본다. 장기적으로 중요하지만 첫 만남의 재미보다는 뒤에 둔다.',
     },
     {
-      key: 'looks', label: '외모', max: 10, style: 7, height: 3,
-      rule: '선호 스타일이면 7점 + 키가 희망 범위 안이면 3점',
-      why: '첫인상은 중요하지만 사진만으로는 판단하기 어려워 비중을 낮췄다.',
+      key: 'looks', label: '외모', max: 5, style: 3, height: 2,
+      rule: '선호 스타일이면 3점 + 키가 희망 범위 안이면 2점',
+      why: '첫인상은 중요하지만 사진만으로는 판단하기 어려워 비중을 낮췄다. 본인이 고른 스타일보다 직접 쓴 자기소개가 더 많은 걸 알려 준다.',
     },
     {
       key: 'region', label: '거리', max: 10, same: 10, sameGroup: 5,
@@ -100,6 +107,10 @@
     { value: 3, label: '매우 중요' },
   ];
 
+  // 자기소개 항목: 비교할 수 없을 때(내가 소개를 안 썼거나 AI 모델을 아직 못 불러옴)는 이 항목을 빼고
+  // 나머지 항목으로 100점을 다시 나눈다. 근거로 보여 줄 가장 비슷한 문장 쌍의 최소 유사도.
+  const INTRO_RULE = { sentenceMin: 0.15 };
+
   const TIE_BREAK ='총점 → 겹친 관심사 개수 → 나이 차가 적은 순 → 이름순';
 
   // 관심을 보냈을 때 상대가 수락하는 규칙. 가상 회원은 직접 답할 수 없어서 같은 궁합 점수를 상대의 마음으로 본다.
@@ -108,7 +119,7 @@
     rule: '내가 관심을 보낸 분과 궁합 점수가 50점 이상이면 상대도 수락해 매칭돼요.',
   };
 
-  const Rules = { REGION_GROUP, OPTIONS, SCORE_RULES, FILTER_RULES, WEIGHT_LEVELS, TIE_BREAK, MATCH_RULE };
+  const Rules = { REGION_GROUP, OPTIONS, SCORE_RULES, FILTER_RULES, WEIGHT_LEVELS, INTRO_RULE, TIE_BREAK, MATCH_RULE };
   root.Rules = Rules;
   if (typeof module === 'object' && module.exports) module.exports = Rules;
 })(typeof window !== 'undefined' ? window : globalThis);
