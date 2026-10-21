@@ -214,7 +214,7 @@ GitHub 저장소에서 **Settings → Pages → Branch: `main` / `(root)`**를 �
 ### 로컬 AI (Ollama) 연결하기
 
 ```bash
-ollama pull llama3.1:8b   # 대화용 모델 하나 받기 (한국어에 강한 모델일수록 대화가 자연스럽습니다)
+ollama pull exaone3.5:7.8b   # 대화용 모델. 같은 대화 7턴 비교에서 한국어가 가장 자연스러웠음 (비상업용 라이선스)
 npx serve .               # http://localhost:3000 같은 주소로 열기
 ```
 
@@ -260,7 +260,7 @@ npm run ai-public   # 인터넷에 열기: 서버 + Cloudflare 무료 터널을 
 
 | 환경변수 | 기본값 | 뜻 |
 |---|---|---|
-| `MODEL` | `llama3.1:8b` | 답장에 쓸 Ollama 모델 |
+| `MODEL` | `exaone3.5:7.8b` | 답장에 쓸 Ollama 모델 (실제 서비스라면 상업용 라이선스 모델로) |
 | `ALLOWED_ORIGINS` | `http://localhost:*,http://127.0.0.1:*` | 호출을 허용할 페이지 주소 (쉼표로 구분) |
 | `RATE_LIMIT` | `20` | IP 하나가 1분에 보낼 수 있는 요청 수 |
 | `GLOBAL_RATE_LIMIT` | `120` | 모든 IP를 합쳐 1분에 받는 요청 수 |

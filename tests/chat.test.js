@@ -35,3 +35,18 @@ test('Claude 프롬프트에 프로필, 공통 관심사, 안전 규칙이 들�
   assert.match(s, /AI 캐릭터라고 솔직하게/);
   assert.match(s, /전화번호, 계좌, 돈/);
 });
+
+test('AI 답장 다듬기: 꾸밈 기호와 넘치는 이모지를 지우고, 대화 중 다시 하는 인사를 빼고, 3문장까지만', () => {
+  const p = byId('f13');
+  const talking = [{ from: 'them', text: '인사' }, { from: 'me', text: '질문' }, { from: 'them', text: '답' }, { from: 'me', text: '또 질문' }];
+  assert.strictEqual(Chat.tidyReply('안녕하세요 준석님! 저 은서예요. 4학년 담임이에요.', p, talking), '4학년 담임이에요.');
+  assert.strictEqual(Chat.tidyReply('저는 **찍먹**파예요. 😅🍲 바삭해야죠! 준석님은요? 진짜 궁금해요. 알려 주세요!', p, talking), '저는 찍먹파예요. 😅 바삭해야죠! 준석님은요?');
+  assert.strictEqual(Chat.tidyReply('안녕하세요! 은서예요. 반가워요', p, [{ from: 'them', text: '인사' }]), '안녕하세요! 은서예요. 반가워요'); // 첫 답의 인사는 그대로
+});
+
+test('한국어를 잘하는 모델을 먼저 고른다', () => {
+  const LLM = require('../js/llm.js');
+  assert.strictEqual(LLM.preferredModel(['llama3.1:8b', 'qwen3:8b', 'exaone3.5:7.8b']), 'exaone3.5:7.8b');
+  assert.strictEqual(LLM.preferredModel(['llama3.1:8b', 'mistral:7b']), 'llama3.1:8b');
+  assert.strictEqual(LLM.isRecommended('exaone3.5:7.8b'), true);
+});

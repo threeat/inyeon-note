@@ -15,7 +15,7 @@ export const CONFIG = {
   // 이 PC 안에서만 받는다. 인터넷에는 Cloudflare Tunnel로만 연다 (같은 와이파이의 다른 기기도 직접 못 들어온다).
   host: env.HOST || '127.0.0.1',
   ollamaUrl: (env.OLLAMA_URL || 'http://localhost:11434').replace(/\/+$/, ''),
-  model: env.MODEL || 'llama3.1:8b',
+  model: env.MODEL || 'exaone3.5:7.8b', // 한국어 대화가 가장 자연스러웠던 모델 (비상업용 라이선스)
   // 호출을 허용할 페이지 주소. 쉼표로 여러 개, 끝의 *는 아무 포트나 (예: http://localhost:*)
   origins: (env.ALLOWED_ORIGINS || 'http://localhost:*,http://127.0.0.1:*').split(',').map((s) => s.trim()).filter(Boolean),
   accessKey: env.ACCESS_KEY || '',          // 넣으면 Authorization: Bearer <키>가 있어야 한다

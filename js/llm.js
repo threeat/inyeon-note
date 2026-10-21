@@ -119,6 +119,13 @@
   // 서버 상태: { ok, model, ollama: 'ok' | 'model-missing' | 'down' }
   const serverHealth = (url, key) => serverFetch(normalize({ serverUrl: url, serverKey: key }), '/health');
 
+  // 한국어 대화를 잘하는 순서. 같은 대화 7턴으로 비교해 정했다 (EXAONE이 가장 자연스러웠고 llama3.1은 한국어가 무너졌다).
+  // EXAONE은 비상업용 라이선스라 실제 서비스에는 다른 모델이나 Claude를 쓴다.
+  const KOREAN_RANK = [/exaone/i, /gemma3/i, /qwen2\.5/i, /qwen3/i, /llama/i];
+  const rankOf = (name) => { const i = KOREAN_RANK.findIndex((re) => re.test(name)); return i < 0 ? KOREAN_RANK.length : i; };
+  const preferredModel = (models) => models.slice().sort((a, b) => rankOf(a) - rankOf(b))[0] || '';
+  const isRecommended = (name) => rankOf(name) === 0;
+
   // 대화용 모델만 고른다 (bge-m3 같은 임베딩 전용 모델은 뺀다)
   async function listOllamaModels(url) {
     const { models } = await ollamaFetch(normalize({ ollamaUrl: url }), '/api/tags');
@@ -142,7 +149,7 @@
     try { return JSON.parse(m[0]); } catch (e) { return null; }
   }
 
-  const LLM = { complete, parseJson, listOllamaModels, serverHealth, normalize, ready, label, clean, CLAUDE_MODEL, OLLAMA_URL, AI_SERVER_URL, DEFAULT_SETTINGS };
+  const LLM = { complete, parseJson, listOllamaModels, preferredModel, isRecommended, serverHealth, normalize, ready, label, clean, CLAUDE_MODEL, OLLAMA_URL, AI_SERVER_URL, DEFAULT_SETTINGS };
   root.LLM = LLM;
   if (typeof module === 'object' && module.exports) module.exports = LLM;
 })(typeof window !== 'undefined' ? window : globalThis);

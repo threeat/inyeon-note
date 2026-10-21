@@ -207,7 +207,7 @@ footer { font-size: .78rem; color: var(--muted); border-top: 1px solid var(--lin
       <div class="fig"><b>3<small>가지</small></b><span>LLM 연결 방식</span></div>
       <div class="fig"><b>0<small>곳</small></b><span>LLM이 점수를 매기는 곳</span></div>
       <div class="fig"><b>20<small>명</small></b><span>설명용 가상 회원</span></div>
-      <div class="fig"><b>81<small>개</small></b><span>자동 테스트, 전부 통과</span></div>
+      <div class="fig"><b>83<small>개</small></b><span>자동 테스트, 전부 통과</span></div>
     </div>
   </header>
 
@@ -251,7 +251,7 @@ footer { font-size: .78rem; color: var(--muted); border-top: 1px solid var(--lin
         <h3>설정에 따라 한 곳으로</h3>
         <div class="prov">
           <div><b>Claude</b><span class="mono">claude-opus-5-5</span> · effort low · 거절 시 다른 모델로 넘기는 fallbacks</div>
-          <div><b>로컬 Ollama</b><span class="mono">/api/chat</span> · JSON 모드 강제 · 이 PC에서만</div>
+          <div><b>로컬 Ollama</b><span class="mono">/api/chat</span> · 한국어 추천 모델(EXAONE 3.5) 자동 선택 · 이 PC에서만</div>
           <div><b>인연노트 AI 서버</b><span class="mono">/v1/complete</span> → 서버 주인의 Ollama · 방문자 모두</div>
         </div>
       </div>
@@ -292,9 +292,10 @@ footer { font-size: .78rem; color: var(--muted); border-top: 1px solid var(--lin
         <dl class="spec">
           <dt>언제</dt><dd>내가 메시지를 보낼 때마다 한 번</dd>
           <dt>보내는 것</dt><dd>상대 프로필 전체(직업·지역·관심사·세부 취향·자기소개·분위기), 내 프로필 요약, 공통 관심사, 지금까지의 대화</dd>
-          <dt>받는 형식</dt><dd>메신저 말투의 답장 글 (JSON 아님), 최대 2,000토큰</dd>
+          <dt>받는 형식</dt><dd>메신저 말투의 답장 글 (JSON 아님), 최대 300토큰</dd>
           <dt>프롬프트 규칙</dt><dd><b>그록처럼 위트 있는 티키타카</b>를 목표로 한 대화 원칙 8가지: ① 마지막 말에 먼저 답하기 ② 앞의 이야기 기억해 받아치기 ③ 의견을 물으면 솔직하게, 둘 중 하나를 고르기 ④ 농담은 농담으로 ⑤ 힘들다면 먼저 공감 ⑥ 매번 질문으로 끝내지 않기 ⑦ 해요체 1~3문장, 분위기별 말투 ⑧ 고유명사 지어내기 금지. 좋은 예와 나쁜 예(동문서답, 의견 피하기)를 함께 보여 줌. 안전 규칙: AI냐고 물으면 솔직히, 연락처·돈·사진 금지, 데이트는 설레게 받되 날짜·장소 확정 금지</dd>
-          <dt>생성 설정</dt><dd>대화는 temperature 0.8, 판단(JSON)은 0.3. 기억 범위 8,192토큰, 반복 억제. 추론 모델은 생각 과정 없이 바로 답하게</dd>
+          <dt>생성 설정</dt><dd>대화는 temperature 0.8·최대 300토큰, 판단(JSON)은 0.3. 기억 범위 8,192토큰, 반복 억제. 추론 모델은 생각 과정 없이 바로 답하게</dd>
+          <dt>답 다듬기</dt><dd>모델이 규칙을 어겨도 메신저처럼 보이게: 굵은 글씨·목록 기호 제거, 이모지 1개만, 대화 중 다시 하는 인사 제거, 3문장까지</dd>
           <dt>검증</dt><dd>Claude가 거절하면 정해 둔 부드러운 문장으로 대신, 빈 답이면 "다시 말해 주실래요?"</dd>
           <dt>실패하면</dt><dd>질문을 알아듣는 규칙형 대답 13종 + 이유 표시</dd>
         </dl>
@@ -423,15 +424,25 @@ footer { font-size: .78rem; color: var(--muted); border-top: 1px solid var(--lin
   <section class="sec">
     <div class="sec-head">
       <p class="eyebrow">이 PC에서 측정</p>
-      <h2>로컬 llama3.1:8b로 돌려 본 결과</h2>
+      <h2>이 PC(RTX 5070, 8GB)에서 돌려 본 결과</h2>
     </div>
     <div class="meas">
       <article class="card"><b>4 / 4</b><p>안전 검사 정답. 직장 위치 캐묻기, 투자 권유, 사진 요구는 잡고 등산 이야기는 통과</p></article>
       <article class="card"><b>약 0.5초</b><p>받은 메시지 한 건을 AI로 검사하는 시간</p></article>
       <article class="card"><b>44초</b><p>첫 캐릭터 답장. 모델을 메모리에 올리는 시간 포함, 이후는 몇 초</p></article>
-      <article class="card"><b>부족</b><p>llama3.1:8b는 한국어가 약해 동문서답과 이상한 낱말("가루빵")이 나옴. 새 프롬프트로 먼저 답하고 공감하는 구조는 좋아졌지만 모델 한계가 남음</p></article>
+      <article class="card"><b>약 1초</b><p>EXAONE 3.5 7.8B의 대화 답장 한 건 (모델을 올린 뒤). 첫 답은 몇 초 더 걸림</p></article>
     </div>
-    <p class="note">한국어에 강한 모델(EXAONE 3.5 7.8B, Qwen3 8B)로 같은 대화를 비교하는 중입니다. 중매 상담과 프로필 코치는 자동 테스트에서 가짜 AI 응답으로만 확인했습니다.</p>
+    <div class="table-wrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th>모델 (같은 대화 7턴)</th><th>결과</th><th>쓰임</th></tr></thead>
+        <tbody>
+          <tr><td>EXAONE 3.5 7.8B</td><td>가장 자연스러움. 질문에 바로 답하고("4학년이에요", "찍먹파예요") 앞의 빵 이야기를 기억함. 재치 있는 받아치기는 아직 약함</td><td>기본 추천 모델. 비상업용 라이선스</td></tr>
+          <tr><td>Qwen3 8B</td><td>서버가 터졌다는 말에 첫 인사를 다시 하는 등 앞뒤가 안 맞음</td><td>상업용 가능하지만 대화 품질 낮음</td></tr>
+          <tr><td>llama3.1:8b</td><td>한국어가 무너짐. "안녕하세요"에 "수고하세요", 없는 빵 "가루빵"</td><td>추천하지 않음</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">대화 품질을 위해 바꾼 것: 그록 스타일 대화 원칙 10가지와 좋은 예·나쁜 예, 답 길이 300토큰, 받은 답 다듬기(꾸밈 기호 제거, 이모지 1개, 다시 하는 인사 제거, 3문장까지). 그록 수준의 재치는 8B급 로컬 모델로는 어렵고, Claude 연결이 가장 좋습니다. 중매 상담과 프로필 코치는 자동 테스트에서 가짜 AI 응답으로만 확인했습니다.</p>
   </section>
 
   <section class="sec">
@@ -529,7 +540,7 @@ footer { font-size: .78rem; color: var(--muted); border-top: 1px solid var(--lin
     </div>
   </section>
 
-  <footer>2026년 10월 21일 기준 · 인연노트 저장소의 코드, 자동 테스트 81개, 이 PC에서의 측정으로 정리했습니다.</footer>
+  <footer>2026년 10월 21일 기준 · 인연노트 저장소의 코드, 자동 테스트 83개, 이 PC에서의 측정으로 정리했습니다.</footer>
 </div>
 
 <script>

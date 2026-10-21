@@ -1347,9 +1347,9 @@
       if (ollamaProbe.url !== url) return;
       Object.assign(ollamaProbe, { models, loading: false,
         error: models.length ? '' : "대화용 모델이 없어요. 'ollama pull llama3.1:8b'처럼 모델을 받아 주세요." });
-      // 저장된 모델이 없거나 지워졌으면 첫 번째 모델을 쓴다
+      // 저장된 모델이 없거나 지워졌으면 한국어를 가장 잘하는 모델을 쓴다
       if (models.length && state.ai && state.ai.ollamaUrl === url && !models.includes(state.ai.ollamaModel)) {
-        state.ai = { ...state.ai, ollamaModel: models[0] };
+        state.ai = { ...state.ai, ollamaModel: window.LLM.preferredModel(models) };
         save();
       }
       if (state.screen === 'main') render();
@@ -1416,7 +1416,7 @@
       };
       const models = ollamaProbe.models;
       const modelSelect = el('select', { 'aria-label': '로컬 모델', onchange: (e) => setAi({ ollamaModel: e.target.value }, `${e.target.value} 모델로 바꿨어요.`) },
-        models.map((m) => el('option', { value: m }, m)));
+        models.map((m) => el('option', { value: m }, window.LLM.isRecommended(m) ? `${m} (한국어 추천)` : m)));
       modelSelect.value = ai.ollamaModel;
       panel = [
         el('form', { class: 'key-row', onsubmit: (e) => { e.preventDefault(); saveUrl(); } },

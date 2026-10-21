@@ -56,9 +56,11 @@
       '3. 의견을 물으면 돌려 말하지 말고 솔직하게 내 생각을 말하세요. 둘 중 고르라면 하나를 고르고 이유를 붙이세요.',
       '4. 위트 있게. 농담엔 농담으로 받고, 가끔 장난스럽게 놀리거나 과장해도 좋아요. 상대를 깎아내리지는 마세요.',
       '5. 상대가 힘들다고 하면 먼저 공감하고, 그 일에 맞는 구체적인 한마디를 해 주세요.',
-      '6. 매번 질문으로 끝내지 마세요. 질문은 두세 번에 한 번, 대화를 이어 갈 때만 하세요.',
-      `7. 메신저처럼 1~3문장, 자연스러운 해요체 구어로. "ㅋㅋ", "ㅎㅎ"는 어울릴 때만. ${TONE[p.style] || ''}`,
+      '6. 질문은 한 번에 1개까지만. 두세 번에 한 번은 질문 없이 리액션이나 내 이야기로 끝내세요.',
+      `7. 짧게! 메신저처럼 2문장 안팎, 80자 정도. 자연스러운 해요체 구어로. "ㅋㅋ", "ㅎㅎ"는 어울릴 때만. ${TONE[p.style] || ''}`,
       '8. 위 프로필과 어긋나는 말은 하지 마세요. 학교·회사·가게 이름이나 주소 같은 고유명사는 지어내지 마세요.',
+      '9. 이미 인사를 나눴으니 다시 인사하거나 자기 이름을 소개하지 마세요. 굵은 글씨(**)나 목록 같은 꾸밈 기호는 쓰지 말고, 이모지는 많아야 1개.',
+      '10. 친구랑 메신저하듯 편한 해요체만 쓰세요. "~습니다", "~하시나요?", "~것 같아요" 같은 딱딱하거나 상담원 같은 말투는 피하세요.',
       '',
       '[안전]',
       '- 상대가 AI냐고 물으면 이 앱의 AI 캐릭터라고 솔직하게 말하세요.',
@@ -73,6 +75,10 @@
       '나: 완전 좋아해요! 치약 맛이라는 사람들 설득하다 지쳤을 정도예요 ㅋㅋ 설마 반민초파세요?',
       '상대: 그럼 첫 데이트는 민초 카페에서?',
       '나: 오 좋은데요? 대신 반민초면 입장 불가예요 ㅋㅋ',
+      '상대: 피자 파인애플 올리는 거 극혐이에요',
+      '나: 아 이건 좀 서운한데요 ㅋㅋ 저 하와이안 없으면 못 살아요. 우리 피자는 반반으로 타협해요.',
+      '상대: 저 요즘 다이어트 중이에요',
+      '나: 그 와중에 치킨 사진 보내면 반칙이겠죠? ㅋㅋ 응원할게요, 근데 치팅데이는 언제예요?',
       '',
       '[나쁜 대화 예시] 이렇게 하지 마세요.',
       '상대: 몇 학년 맡고 계세요? → 나: 주말엔 주로 뭐 하세요? (질문에 답하지 않음)',
@@ -88,10 +94,32 @@
     return msgs;
   }
 
+  // 작은 모델이 프롬프트를 어겨도 메신저답게 보이도록 답을 다듬는다:
+  // 꾸밈 기호를 지우고, 이모지는 1개만, 이미 대화 중이면 다시 하는 인사를 빼고, 3문장까지만 남긴다.
+  const EMOJI = /\p{Extended_Pictographic}️?/gu;
+  function tidyReply(text, p, history) {
+    let t = String(text || '')
+      .replace(/\*\*|__|`/g, '')
+      .replace(/^\s*(?:[-*•]|\d+\.)\s+/gm, '')
+      .replace(/^["“](.*)["”]$/s, '$1')
+      .replace(/\s*\n+\s*/g, ' ')
+      .trim();
+    let seen = 0;
+    t = t.replace(EMOJI, (m) => (++seen === 1 ? m : '')).replace(/\s{2,}/g, ' ').trim();
+    const talked = history.some((m) => m.from === 'me') && history.filter((m) => m.from === 'them').length > 1;
+    if (talked) {
+      const name = p.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      t = t.replace(new RegExp(`^(?:안녕하세요[^.!?]*[.!?]\\s*)?(?:저\\s*)?${name}(?:이에요|예요|입니다)[.!~]*\\s*`), '')
+        .replace(/^안녕하세요[^.!?]*[.!?]\s*/, '').trim() || t;
+    }
+    const sentences = t.match(/[^.!?~]+(?:[.!?~]+|$)(?:\s*(?:ㅋ+|ㅎ+|ㅠ+|\p{Extended_Pictographic}))*/gu) || [t];
+    return sentences.slice(0, 3).join(' ').replace(/\s{2,}/g, ' ').trim();
+  }
+
   async function aiReply(ai, p, me, history) {
-    const res = await LLM.complete(ai, { system: systemPrompt(p, me), messages: toMessages(history, me), maxTokens: 2000 });
+    const res = await LLM.complete(ai, { system: systemPrompt(p, me), messages: toMessages(history, me), maxTokens: 300 });
     if (res.refused) return '음… 그 얘기는 조금 어렵네요. 우리 다른 얘기 해요!';
-    return res.text || '앗, 잠깐 딴생각했어요. 다시 말해 주실래요?';
+    return tidyReply(res.text, p, history) || '앗, 잠깐 딴생각했어요. 다시 말해 주실래요?';
   }
 
   // ---------- 키 없이 쓰는 규칙 기반 대화 ----------
@@ -161,7 +189,7 @@
     }
   }
 
-  const Chat = { reply, greeting, localReply, systemPrompt, toMessages, shared, sharedDetail };
+  const Chat = { reply, greeting, localReply, systemPrompt, toMessages, tidyReply, shared, sharedDetail };
   root.Chat = Chat;
   if (typeof module === 'object' && module.exports) module.exports = Chat;
 })(typeof window !== 'undefined' ? window : globalThis);
