@@ -114,9 +114,11 @@
   const TIE_BREAK ='총점 → 겹친 관심사 개수 → 나이 차가 적은 순 → 이름순';
 
   // 관심을 보냈을 때 상대가 수락하는 규칙. 가상 회원은 직접 답할 수 없어서 같은 궁합 점수를 상대의 마음으로 본다.
+  // 질문 카드나 자기소개에 한마디를 남기면 기준을 noteBonus만큼 낮춘다. 그냥 누른 관심보다 진심이 전해지기 때문이다.
   const MATCH_RULE = {
     threshold: 50,
-    rule: '내가 관심을 보낸 분과 궁합 점수가 50점 이상이면 상대도 수락해 매칭돼요.',
+    noteBonus: 5,
+    rule: '내가 관심을 보낸 분과 궁합 점수가 50점 이상이면 상대도 수락해 매칭돼요. 한마디를 남기면 45점부터 매칭돼요.',
   };
 
   const Rules = { REGION_GROUP, OPTIONS, SCORE_RULES, FILTER_RULES, WEIGHT_LEVELS, INTRO_RULE, TIE_BREAK, MATCH_RULE };

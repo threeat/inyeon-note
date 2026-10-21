@@ -1,11 +1,8 @@
 // 매칭된 가상 회원(캐릭터)과의 대화.
-// - API 키가 있으면 Claude가 프로필대로 캐릭터를 연기한다 (공식 SDK를 CDN에서 불러옴).
-// - 키가 없거나 연결에 실패하면 프로필 기반 규칙으로 답한다.
+// - AI 설정(Claude 또는 로컬 Ollama)이 켜져 있으면 LLM이 프로필대로 캐릭터를 연기한다 (호출은 llm.js).
+// - 꺼져 있거나 연결에 실패하면 프로필 기반 규칙으로 답한다.
 (function (root) {
-  const SDK_URL = 'https://esm.sh/@anthropic-ai/sdk@0.129.0';
-  const MODEL = 'claude-opus-5-5';
-  let sdkPromise = null;
-  const loadSdk = () => (sdkPromise = sdkPromise || import(SDK_URL).then((m) => m.default));
+  const LLM = root.LLM || (typeof require === 'function' ? require('./llm.js') : null);
 
   // 받침에 맞는 조사: 지민이에요 / 은서예요, 교사로 / 회계사로 / 연구원으로
   const batchim = (w) => { const c = (w || '').charCodeAt(w.length - 1) - 0xac00; return c >= 0 && c <= 11171 ? c % 28 : 0; };
@@ -34,11 +31,13 @@
     지적인: '차분하고 생각이 깊게, 가끔 책이나 전시 이야기를 섞어요.',
   };
 
-  // ---------- Claude 캐릭터 프롬프트 ----------
+  // ---------- AI 캐릭터 프롬프트 ----------
+  // 작은 로컬 모델도 따라 하도록, 원칙은 번호로 짧게 적고 좋은 예와 나쁜 예를 함께 보여 준다.
+  // 목표는 그록처럼 위트 있고 솔직한 티키타카: 먼저 답하고, 기억하고, 의견을 말하고, 농담을 받는다.
   function systemPrompt(p, me) {
     const sh = shared(me, p);
     return [
-      `당신은 소개팅 앱 "인연노트" 데모 속 가상 회원 "${p.name}"을(를) 연기합니다. 실제 사람이 아니라 이 앱의 AI 캐릭터입니다.`,
+      `당신은 소개팅 앱 "인연노트"의 가상 회원 "${p.name}"을(를) 연기합니다. 이 앱의 AI 캐릭터지만, 대화만큼은 진짜 사람처럼 합니다.`,
       '',
       '[내 프로필]',
       `이름 ${p.name}, ${p.age}세 ${p.gender}, ${p.orientationPublic === false ? '성적 지향 비공개' : p.orientation}`,
@@ -51,13 +50,34 @@
       `${me.name}, ${me.age}세 ${me.gender}, ${me.job || '직업 미입력'}, ${me.region}, 관심사 ${withDetails(me)}`,
       sh.length ? `공통 관심사: ${sh.join(', ')}${sharedDetail(me, p) ? ` (특히 ${sharedDetail(me, p).category}${batchim(sharedDetail(me, p).category) ? '은' : '는'} ${sharedDetail(me, p).detail} 취향까지 같아요)` : ''}` : '공통 관심사는 없어요. 상대 관심사에 호기심을 보여 주세요.',
       '',
-      '[말투와 규칙]',
-      `- 방금 매칭된 첫 대화입니다. 존댓말을 쓰고, ${TONE[p.style] || ''}`,
-      '- 메신저처럼 한 번에 1~3문장으로 짧게 답하고, 자주 질문을 돌려 대화를 이어 가세요.',
-      '- 위 프로필과 어긋나는 말은 하지 마세요. 회사 이름, 주소 같은 구체적인 개인정보는 지어내지 마세요.',
+      '[대화 원칙: 가장 먼저 지키세요]',
+      '1. 상대의 마지막 메시지에 먼저 정확히 반응하세요. 질문을 받으면 첫 문장에서 바로 답하세요. 엉뚱한 화제로 넘어가지 마세요.',
+      '2. 앞에서 나온 이야기(상대의 일, 기분, 농담)를 기억했다가 자연스럽게 다시 꺼내세요.',
+      '3. 의견을 물으면 돌려 말하지 말고 솔직하게 내 생각을 말하세요. 둘 중 고르라면 하나를 고르고 이유를 붙이세요.',
+      '4. 위트 있게. 농담엔 농담으로 받고, 가끔 장난스럽게 놀리거나 과장해도 좋아요. 상대를 깎아내리지는 마세요.',
+      '5. 상대가 힘들다고 하면 먼저 공감하고, 그 일에 맞는 구체적인 한마디를 해 주세요.',
+      '6. 매번 질문으로 끝내지 마세요. 질문은 두세 번에 한 번, 대화를 이어 갈 때만 하세요.',
+      `7. 메신저처럼 1~3문장, 자연스러운 해요체 구어로. "ㅋㅋ", "ㅎㅎ"는 어울릴 때만. ${TONE[p.style] || ''}`,
+      '8. 위 프로필과 어긋나는 말은 하지 마세요. 학교·회사·가게 이름이나 주소 같은 고유명사는 지어내지 마세요.',
+      '',
+      '[안전]',
       '- 상대가 AI냐고 물으면 이 앱의 AI 캐릭터라고 솔직하게 말하세요.',
-      '- 전화번호, 계좌, 돈, 사진을 요구하거나 주지 마세요. 실제 만남 약속은 정하지 말고 "앱에서 더 얘기해 봐요"처럼 가볍게 넘기세요.',
+      '- 전화번호, 계좌, 돈, 사진을 요구하거나 주지 마세요.',
+      '- 데이트 이야기는 설레게 받아 주되, 날짜·장소를 확정하거나 연락처를 주고받지는 마세요.',
       '- 무례하거나 성적인 요청은 정중하게 선을 긋고 다른 이야기로 돌리세요.',
+      '',
+      '[좋은 대화 예시] 다른 사람의 대화예요. 말투와 리듬만 참고하고 내용은 따라 하지 마세요.',
+      '상대: 오늘 회사에서 발표 망했어요 ㅠ',
+      '나: 헐 고생했어요 ㅠㅠ 어디서 꼬였어요? 저는 발표 전날 꼭 악몽 꾸는 타입이라 그 기분 너무 알아요.',
+      '상대: 민트초코 좋아해요?',
+      '나: 완전 좋아해요! 치약 맛이라는 사람들 설득하다 지쳤을 정도예요 ㅋㅋ 설마 반민초파세요?',
+      '상대: 그럼 첫 데이트는 민초 카페에서?',
+      '나: 오 좋은데요? 대신 반민초면 입장 불가예요 ㅋㅋ',
+      '',
+      '[나쁜 대화 예시] 이렇게 하지 마세요.',
+      '상대: 몇 학년 맡고 계세요? → 나: 주말엔 주로 뭐 하세요? (질문에 답하지 않음)',
+      '상대: 저 같은 사람 어때요? → 나: 앱에서 더 얘기해 봐요! (의견을 피함)',
+      '상대: 안녕하세요! → 나: 수고하세요! (상황에 안 맞는 인사)',
     ].join('\n');
   }
 
@@ -68,31 +88,10 @@
     return msgs;
   }
 
-  async function aiReply(apiKey, p, me, history) {
-    const Anthropic = await loadSdk();
-    const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
-    try {
-      const res = await client.beta.messages.create({
-        model: MODEL,
-        max_tokens: 2000,
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-        output_config: { effort: 'low' },
-        system: systemPrompt(p, me),
-        messages: toMessages(history, me),
-      });
-      if (res.stop_reason === 'refusal') return '음… 그 얘기는 조금 어렵네요. 우리 다른 얘기 해요!';
-      const text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
-      return text || '앗, 잠깐 딴생각했어요. 다시 말해 주실래요?';
-    } catch (e) {
-      if (e instanceof Anthropic.AuthenticationError) throw new Error('API 키가 올바르지 않아요. 내 정보에서 키를 확인해 주세요.');
-      if (e instanceof Anthropic.PermissionDeniedError) throw new Error('이 API 키로는 이 모델을 쓸 수 없어요.');
-      if (e instanceof Anthropic.RateLimitError) throw new Error('요청이 많아요. 잠시 후 다시 시도해 주세요.');
-      if (e instanceof Anthropic.BadRequestError) throw new Error(`요청 오류: ${e.message}`);
-      if (e instanceof Anthropic.APIConnectionError) throw new Error('AI 서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.');
-      if (e instanceof Anthropic.APIError) throw new Error(`AI 응답 오류 (${e.status})`);
-      throw e;
-    }
+  async function aiReply(ai, p, me, history) {
+    const res = await LLM.complete(ai, { system: systemPrompt(p, me), messages: toMessages(history, me), maxTokens: 2000 });
+    if (res.refused) return '음… 그 얘기는 조금 어렵네요. 우리 다른 얘기 해요!';
+    return res.text || '앗, 잠깐 딴생각했어요. 다시 말해 주실래요?';
   }
 
   // ---------- 키 없이 쓰는 규칙 기반 대화 ----------
@@ -112,10 +111,12 @@
   };
   const tone = (p, s) => (p.style === '귀여운' ? `${s} ㅎㅎ` : p.style === '스포티한' ? `${s}!` : s);
 
-  function greeting(p, me) {
+  // note: 내가 관심과 함께 남긴 한마디 ({ label }). 있으면 그 말에 답하며 인사한다.
+  function greeting(p, me, note) {
     const sh = shared(me, p);
     const sd = sharedDetail(me, p);
-    const hook = sd ? `${sd.category} 중에서도 ${sd.detail} 좋아하신다고 해서 반가웠어요.` : sh.length ? `${sh[0]} 좋아하신다고 해서 반가웠어요.` : `${me.interests[0] || '관심사'} 좋아하시는 거 보고 궁금했어요.`;
+    const hook = note ? `${note.label === '자기소개' ? '제 자기소개' : `'${note.label}' 카드`}에 남겨 주신 말 잘 봤어요.`
+      : sd ? `${sd.category} 중에서도 ${sd.detail} 좋아하신다고 해서 반가웠어요.` : sh.length ? `${sh[0]} 좋아하신다고 해서 반가웠어요.` : `${me.interests[0] || '관심사'} 좋아하시는 거 보고 궁금했어요.`;
     return tone(p, `안녕하세요 ${me.name}님! ${ieyo(p.name)}. ${hook} 매칭돼서 기뻐요`);
   }
 
@@ -150,17 +151,17 @@
     return tone(p, pick([`오 그렇군요! ${ask}`, `그 얘기 더 듣고 싶어요. ${ask}`, `저도 비슷한 생각을 해 본 적 있어요. ${ask}`], n + text.length));
   }
 
-  // 답장: 키가 있으면 Claude, 실패하면 규칙 대화로 이어 가고 이유를 알려 준다.
-  async function reply({ apiKey, profile, me, history }) {
-    if (!apiKey) return { text: localReply(profile, me, history), mode: 'local' };
+  // 답장: AI 설정이 켜져 있으면 LLM, 실패하면 규칙 대화로 이어 가고 이유를 알려 준다.
+  async function reply({ ai, profile, me, history }) {
+    if (!LLM.ready(ai)) return { text: localReply(profile, me, history), mode: 'local' };
     try {
-      return { text: await aiReply(apiKey, profile, me, history), mode: 'ai' };
+      return { text: await aiReply(ai, profile, me, history), mode: 'ai' };
     } catch (e) {
       return { text: localReply(profile, me, history), mode: 'local', error: e.message };
     }
   }
 
-  const Chat = { reply, greeting, localReply, systemPrompt, MODEL };
+  const Chat = { reply, greeting, localReply, systemPrompt, toMessages, shared, sharedDetail };
   root.Chat = Chat;
   if (typeof module === 'object' && module.exports) module.exports = Chat;
 })(typeof window !== 'undefined' ? window : globalThis);

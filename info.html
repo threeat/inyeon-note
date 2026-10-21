@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>인연노트 기능 지도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* 레이아웃: 앱처럼 세로로 흐르는 한 장. 넓은 화면에서는 섹션 안에서만 2~3열로 펼친다. 앱의 장미색·편지지 토큰을 그대로 쓴다. */
+:root {
+  --bg: #f4ebe4;
+  --surface: #ffffff;
+  --sunk: #f7efe9;
+  --ink: #251a1d;
+  --muted: #6f6063;
+  --line: #e9dcd3;
+  --brand: #c92f57;
+  --brand-soft: #fce9ee;
+  --violet: #6a4cc4;
+  --violet-soft: #efeafb;
+  --ok: #2c8460;
+  --ok-soft: #e4f3eb;
+  --warn: #935200;
+  --warn-soft: #fff3e2;
+  --display: "Gowun Batang", "AppleMyungjo", "Batang", serif;
+  --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #110d0e; --surface: #1d1719; --sunk: #272023; --ink: #f5ecee; --muted: #ab9a9e; --line: #382d31;
+    --brand: #ff6b8e; --brand-soft: #3f1f29; --violet: #b4a2f5; --violet-soft: #2a2340; --ok: #5cc292; --ok-soft: #1c3329; --warn: #f3c27a; --warn-soft: #3a2c17;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #110d0e; --surface: #1d1719; --sunk: #272023; --ink: #f5ecee; --muted: #ab9a9e; --line: #382d31;
+  --brand: #ff6b8e; --brand-soft: #3f1f29; --violet: #b4a2f5; --violet-soft: #2a2340; --ok: #5cc292; --ok-soft: #1c3329; --warn: #f3c27a; --warn-soft: #3a2c17;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 15px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 64px;
+}
+.page { max-width: 1060px; margin: 0 auto; display: flex; flex-direction: column; gap: 60px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.25; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.12rem; }
+p { margin: 0; }
+.eyebrow { font-size: .74rem; font-weight: 700; letter-spacing: .08em; color: var(--brand); }
+.lead { color: var(--muted); max-width: 64ch; }
+.sec { display: flex; flex-direction: column; gap: 20px; }
+.sec-head { display: flex; flex-direction: column; gap: 6px; }
+code, .mono { font-family: var(--mono); font-size: .84em; }
+code { background: var(--sunk); padding: 1px 6px; border-radius: 6px; overflow-wrap: anywhere; }
+.tag { display: inline-block; font-size: .66rem; font-weight: 700; letter-spacing: .04em; padding: 1px 7px; border-radius: 999px; vertical-align: 2px; margin-left: 4px; }
+.tag.new { background: var(--brand-soft); color: var(--brand); }
+.tag.llm { background: var(--violet-soft); color: var(--violet); }
+.tag.rule { background: var(--sunk); color: var(--muted); border: 1px solid var(--line); }
+
+/* ---------- 머리 ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: end; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--brand); font-family: var(--display); font-size: 1.1rem; }
+.app-link { margin-left: auto; font-family: var(--body); font-size: .85rem; color: var(--brand); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; background: var(--surface); }
+.app-link:hover, .app-link:focus-visible { border-color: var(--brand); }
+.heart { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--brand); color: var(--surface); font-size: 1rem; }
+.hero h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin-top: 14px; }
+.hero h1 em { font-style: normal; color: var(--brand); }
+.hero .lead { margin-top: 14px; }
+.figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+.fig { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; }
+.fig b { font-family: var(--display); font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fig b small { font-size: .95rem; margin-left: 2px; }
+.fig span { font-size: .82rem; color: var(--muted); }
+
+/* ---------- 흐름 ---------- */
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; counter-reset: step; }
+.flow li { counter-increment: step; position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+.flow li::before { content: counter(step); font-family: var(--mono); font-size: .75rem; color: var(--brand); }
+.flow li:not(:last-child)::after { content: "›"; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: var(--muted); z-index: 1; }
+.flow b { font-size: .93rem; }
+.flow small { font-size: .78rem; color: var(--muted); line-height: 1.45; }
+.flow li.ai { border-color: color-mix(in srgb, var(--violet) 45%, var(--line)); }
+
+/* ---------- 카드 ---------- */
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.card ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.card li { font-size: .9rem; padding-left: 14px; position: relative; }
+.card li::before { content: ""; position: absolute; left: 0; top: .62em; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); }
+.card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.card-top .mono { color: var(--muted); font-size: .74rem; }
+.note { font-size: .8rem; color: var(--muted); }
+
+/* ---------- LLM 파이프라인 ---------- */
+.pipe { display: grid; grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr) 28px minmax(0, 1.15fr) 28px minmax(0, 1fr); gap: 0; align-items: stretch; }
+.pipe .arrow { display: grid; place-items: center; color: var(--muted); font-size: 1.1rem; }
+.stage { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.stage h3 { font-size: .98rem; }
+.stage .k { font-size: .7rem; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+.stage ul { margin: 0; padding-left: 16px; font-size: .84rem; display: flex; flex-direction: column; gap: 4px; }
+.stage.core { border: 1.5px solid var(--violet); background: var(--violet-soft); }
+.prov { display: flex; flex-direction: column; gap: 6px; }
+.prov div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font-size: .8rem; }
+.prov b { display: block; font-size: .84rem; }
+.fallback { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .84rem; background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 14px; }
+
+/* ---------- LLM 기능 카드 ---------- */
+.uses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.use { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.use-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.use-head h3 { font-size: 1.15rem; }
+.use-head .where { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+.num { font-family: var(--mono); font-size: .78rem; color: var(--violet); background: var(--violet-soft); border-radius: 8px; padding: 2px 8px; flex: none; }
+dl.spec { margin: 0; display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 7px 12px; font-size: .86rem; }
+dl.spec dt { font-size: .74rem; font-weight: 700; color: var(--muted); padding-top: 2px; }
+dl.spec dd { margin: 0; min-width: 0; }
+.json { font-family: var(--mono); font-size: .76rem; background: var(--sunk); border-radius: 8px; padding: 6px 9px; display: block; overflow-x: auto; white-space: pre; }
+
+/* ---------- 표 ---------- */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 680px; font-size: .86rem; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: .72rem; letter-spacing: .05em; color: var(--muted); font-weight: 700; background: var(--sunk); }
+td:first-child { font-weight: 700; white-space: nowrap; }
+
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.box-no { background: var(--sunk); border: 1px dashed var(--line); }
+.box-no li::before { background: var(--brand); }
+
+/* ---------- 매칭 엔진 ---------- */
+.engine { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 14px; }
+.funnel { display: flex; flex-direction: column; gap: 6px; }
+.frow { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 10px; align-items: center; font-size: .88rem; }
+.pill { font-size: .68rem; font-weight: 700; text-align: center; padding: 2px 0; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.pill.always { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.pill.on { background: var(--brand-soft); color: var(--brand); border-color: transparent; }
+.bars { display: flex; flex-direction: column; gap: 8px; position: relative; }
+.bar { display: grid; grid-template-columns: 72px minmax(0, 1fr) 34px; gap: 10px; align-items: center; font-size: .88rem; border-radius: 8px; padding: 2px 4px; margin: 0 -4px; cursor: default; }
+.bar:hover, .bar:focus-visible { background: var(--sunk); outline: none; }
+.bar:focus-visible { box-shadow: 0 0 0 2px var(--brand); }
+.track { height: 14px; position: relative; }
+.fill { position: absolute; inset: 0 auto 0 0; background: var(--brand); border-radius: 0 4px 4px 0; }
+.bar[data-ai] .fill { background: repeating-linear-gradient(135deg, var(--brand) 0 6px, color-mix(in srgb, var(--brand) 55%, var(--surface)) 6px 9px); }
+.bar b { text-align: right; font-variant-numeric: tabular-nums; }
+.axis { display: grid; grid-template-columns: 72px minmax(0, 1fr) 34px; gap: 10px; font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.axis .ticks { position: relative; height: 18px; border-top: 1px solid var(--line); }
+.axis .ticks i { position: absolute; top: 3px; font-style: normal; transform: translateX(-50%); }
+.axis .ticks i:first-child { transform: none; }
+.tip { position: absolute; z-index: 5; max-width: 280px; background: var(--ink); color: var(--surface); font-size: .8rem; line-height: 1.45; padding: 8px 10px; border-radius: 10px; pointer-events: none; }
+
+/* ---------- 측정 / 구조 / 다음 ---------- */
+.meas { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.meas .card b { font-family: var(--display); font-size: 1.7rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.meas .card p { font-size: .84rem; color: var(--muted); }
+.mods { display: flex; flex-wrap: wrap; gap: 6px; }
+.mod { font-family: var(--mono); font-size: .76rem; padding: 4px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--sunk); }
+.mod.llm { border-color: var(--violet); color: var(--violet); background: var(--violet-soft); }
+.layer { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 10px; align-items: start; }
+.layer > span { font-size: .74rem; font-weight: 700; color: var(--muted); padding-top: 6px; }
+.layers { display: flex; flex-direction: column; gap: 8px; }
+.next { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.next .card { background: var(--warn-soft); border-color: transparent; }
+.next .card.go { background: var(--ok-soft); }
+.next p { font-size: .88rem; }
+footer { font-size: .78rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+
+@media (max-width: 900px) {
+  .hero, .engine, .split, .uses { grid-template-columns: minmax(0, 1fr); }
+  .grid3, .next { grid-template-columns: minmax(0, 1fr); }
+  .meas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .flow li::after { display: none; }
+  .pipe { grid-template-columns: minmax(0, 1fr); }
+  .pipe .arrow { transform: rotate(90deg); height: 28px; }
+}
+@media (max-width: 420px) {
+  .meas { grid-template-columns: minmax(0, 1fr); }
+  dl.spec { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  dl.spec dd { margin-bottom: 6px; }
+  .layer { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+</style>
+
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div>
+      <div class="brand"><span class="heart" aria-hidden="true">♥</span>인연노트 <a class="app-link" href="https://threeat.github.io/inyeon-note/">앱 열기 ›</a></div>
+      <h1>조건이 아니라<br><em>이유</em>로 만나는 소개팅</h1>
+      <p class="lead">누구를 왜 걸렀는지, 무엇에 몇 점을 줬는지, 1위가 왜 1위인지 문장으로 보여 주는 소개팅 앱입니다. 점수는 규칙이 매기고, LLM은 사람의 말을 다루는 다섯 군데에서만 일합니다. 서버 없이 브라우저만으로 돌아가고, LLM은 Claude, 이 PC의 Ollama, 인연노트 AI 서버 중에서 고릅니다.</p>
+    </div>
+    <div class="figures" aria-label="한눈에 보는 숫자">
+      <div class="fig"><b>5<small>곳</small></b><span>LLM을 쓰는 기능</span></div>
+      <div class="fig"><b>1<small>개</small></b><span>임베딩 모델 (자기소개 비교)</span></div>
+      <div class="fig"><b>3<small>가지</small></b><span>LLM 연결 방식</span></div>
+      <div class="fig"><b>0<small>곳</small></b><span>LLM이 점수를 매기는 곳</span></div>
+      <div class="fig"><b>20<small>명</small></b><span>설명용 가상 회원</span></div>
+      <div class="fig"><b>81<small>개</small></b><span>자동 테스트, 전부 통과</span></div>
+    </div>
+  </header>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">사용 흐름</p>
+      <h2>가입부터 만남 후기까지</h2>
+      <p class="lead">테두리가 보라색인 단계에서 LLM이 쓰입니다.</p>
+    </div>
+    <ol class="flow">
+      <li><b>가입</b><small>기본 정보, 사진, 생활·가치관, 관심사, 자기소개, 질문 카드, 이상형, 절대 조건</small></li>
+      <li class="ai"><b>프로필 코치</b><small>빠진 것과 막연한 문장을 짚고, AI가 고쳐 쓸 방향 제안</small></li>
+      <li><b>거르기·점수</b><small>조건 10개로 거르고 8개 항목 100점으로 순위</small></li>
+      <li class="ai"><b>AI 중매 상담</b><small>말로 설명하면 조건 변경안과 순위 변화를 미리 보기</small></li>
+      <li><b>한마디 + 관심</b><small>질문 카드에 한마디 남기면 45점부터 매칭</small></li>
+      <li class="ai"><b>채팅</b><small>캐릭터 답장, 첫 마디 추천, 받은 메시지 안전 검사</small></li>
+      <li><b>데이트·후기</b><small>데이트 코스 제안, 만남 후기로 중요도 조정</small></li>
+    </ol>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">LLM 한눈에</p>
+      <h2>모든 LLM 호출은 한 길로 지나간다</h2>
+      <p class="lead">다섯 기능은 LLM을 직접 부르지 않고 <code>llm.js</code>의 <code>complete()</code> 하나만 부릅니다. 어느 모델을 쓰든, 실패하든, 기능 코드는 같습니다.</p>
+    </div>
+    <div class="pipe">
+      <div class="stage">
+        <p class="k">① 기능이 요청을 만든다</p>
+        <h3>시스템 프롬프트 + 대화</h3>
+        <ul>
+          <li>기능마다 역할과 규칙을 적은 시스템 프롬프트</li>
+          <li>필요한 프로필 정보만 골라 넣음</li>
+          <li>판단·추천은 JSON으로 답하라고 요구</li>
+          <li>답 길이 상한 300~2,000토큰</li>
+        </ul>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage core">
+        <p class="k">② 연결 층 <span class="mono">llm.js</span></p>
+        <h3>설정에 따라 한 곳으로</h3>
+        <div class="prov">
+          <div><b>Claude</b><span class="mono">claude-opus-5-5</span> · effort low · 거절 시 다른 모델로 넘기는 fallbacks</div>
+          <div><b>로컬 Ollama</b><span class="mono">/api/chat</span> · JSON 모드 강제 · 이 PC에서만</div>
+          <div><b>인연노트 AI 서버</b><span class="mono">/v1/complete</span> → 서버 주인의 Ollama · 방문자 모두</div>
+        </div>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage">
+        <p class="k">③ 받은 답을 정리하고 검사한다</p>
+        <h3>믿기 전에 확인</h3>
+        <ul>
+          <li>추론 모델의 생각 과정(<code>&lt;think&gt;</code>) 제거</li>
+          <li>앞뒤 군말이 있어도 첫 JSON 덩어리만 꺼냄</li>
+          <li>허용한 키와 범위 안의 값만 남김 (중매 상담)</li>
+          <li>빈 답·모양이 틀린 답은 실패로 처리</li>
+        </ul>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="stage">
+        <p class="k">④ 화면에 보여 준다</p>
+        <h3>사용자가 마지막에 고른다</h3>
+        <ul>
+          <li>AI가 만든 것은 "AI 해석", "AI 판단"으로 표시</li>
+          <li>조건 변경·자기소개 예시는 바로 저장하지 않음</li>
+          <li>적용 전 미리 보기, 적용 후 되돌리기</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fallback"><b>실패하면</b> AI가 꺼져 있거나, 연결이 안 되거나, 답이 이상하면 → 같은 기능의 <b>규칙 버전</b>으로 이어 가고, 필요하면 실패 이유를 화면에 적습니다. 그래서 AI 없이도 앱 전체가 동작합니다.</div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">LLM이 쓰이는 다섯 곳</p>
+      <h2>어디서, 무엇을 보내고, 무엇을 받나</h2>
+      <p class="lead">모두 실제 코드 기준입니다. "받는 형식"의 JSON은 프롬프트로 요구하는 모양 그대로입니다.</p>
+    </div>
+    <div class="uses">
+      <article class="use">
+        <div class="use-head"><div><h3>캐릭터 답장</h3><p class="where">채팅방 · <span class="mono">chat.js</span></p></div><span class="num">LLM 1</span></div>
+        <dl class="spec">
+          <dt>언제</dt><dd>내가 메시지를 보낼 때마다 한 번</dd>
+          <dt>보내는 것</dt><dd>상대 프로필 전체(직업·지역·관심사·세부 취향·자기소개·분위기), 내 프로필 요약, 공통 관심사, 지금까지의 대화</dd>
+          <dt>받는 형식</dt><dd>메신저 말투의 답장 글 (JSON 아님), 최대 2,000토큰</dd>
+          <dt>프롬프트 규칙</dt><dd><b>그록처럼 위트 있는 티키타카</b>를 목표로 한 대화 원칙 8가지: ① 마지막 말에 먼저 답하기 ② 앞의 이야기 기억해 받아치기 ③ 의견을 물으면 솔직하게, 둘 중 하나를 고르기 ④ 농담은 농담으로 ⑤ 힘들다면 먼저 공감 ⑥ 매번 질문으로 끝내지 않기 ⑦ 해요체 1~3문장, 분위기별 말투 ⑧ 고유명사 지어내기 금지. 좋은 예와 나쁜 예(동문서답, 의견 피하기)를 함께 보여 줌. 안전 규칙: AI냐고 물으면 솔직히, 연락처·돈·사진 금지, 데이트는 설레게 받되 날짜·장소 확정 금지</dd>
+          <dt>생성 설정</dt><dd>대화는 temperature 0.8, 판단(JSON)은 0.3. 기억 범위 8,192토큰, 반복 억제. 추론 모델은 생각 과정 없이 바로 답하게</dd>
+          <dt>검증</dt><dd>Claude가 거절하면 정해 둔 부드러운 문장으로 대신, 빈 답이면 "다시 말해 주실래요?"</dd>
+          <dt>실패하면</dt><dd>질문을 알아듣는 규칙형 대답 13종 + 이유 표시</dd>
+        </dl>
+      </article>
+      <article class="use">
+        <div class="use-head"><div><h3>받은 메시지 안전 검사</h3><p class="where">채팅방 · <span class="mono">safety.js</span></p></div><span class="num">LLM 2</span></div>
+        <dl class="spec">
+          <dt>언제</dt><dd>상대 메시지가 도착하고 <b>규칙 6종에 걸리지 않았을 때만</b>. 답장을 먼저 보여 주고 뒤에서 검사</dd>
+          <dt>보내는 것</dt><dd>그 메시지 한 개만 (프로필·대화 기록은 보내지 않음)</dd>
+          <dt>받는 형식</dt><dd><span class="json">{"flag": true, "category": "money", "reason": "…"}</span>category는 contact · money · sexual · abuse · personal · none, 최대 300토큰</dd>
+          <dt>프롬프트 규칙</dt><dd>평범한 인사·취미·농담은 경고하지 않기, 애매하면 경고하지 않기 (오탐을 줄이는 쪽)</dd>
+          <dt>검증</dt><dd>flag가 정확히 true이고 category가 none이 아닐 때만 경고. 메시지 아래에 "(AI 판단)" 표시</dd>
+          <dt>실패하면</dt><dd>경고 없이 넘어감 (규칙 검사는 이미 끝난 상태)</dd>
+        </dl>
+      </article>
+      <article class="use">
+        <div class="use-head"><div><h3>첫 마디 추천</h3><p class="where">채팅방, 아직 말을 안 걸었을 때 · <span class="mono">starters.js</span></p></div><span class="num">LLM 3</span></div>
+        <dl class="spec">
+          <dt>언제</dt><dd>"AI로 맞춤 추천 받기"를 눌렀을 때만</dd>
+          <dt>보내는 것</dt><dd>두 사람의 이름·나이·지역·관심사(세부 취향 포함)·자기소개</dd>
+          <dt>받는 형식</dt><dd><span class="json">{"messages": ["…", "…", "…"]}</span>최대 600토큰</dd>
+          <dt>프롬프트 규칙</dt><dd>그대로 보낼 메시지 본문만(조언 문장 금지), 서로 다른 소재 3개, 물음표 질문으로 끝내기, 외모 평가·연락처·사는 곳·만남 약속 금지, 예시 형식 제공</dd>
+          <dt>검증</dt><dd>빈 문장 빼고 최대 3개. 하나도 없으면 실패</dd>
+          <dt>실패하면</dt><dd>세부 취향·공통 관심사·지역으로 만든 규칙 문장 3개 그대로</dd>
+        </dl>
+      </article>
+      <article class="use">
+        <div class="use-head"><div><h3>AI 중매 상담</h3><p class="where">홈 · <span class="mono">concierge.js</span></p><span class="tag new">NEW</span></div><span class="num">LLM 4</span></div>
+        <dl class="spec">
+          <dt>언제</dt><dd>"조건 찾기"를 눌렀을 때</dd>
+          <dt>보내는 것</dt><dd>사용자가 쓴 문장(500자까지), 내 나이·성별·지역·관심사, 지금의 희망 나이·키·스타일, 바꿀 수 있는 장치 목록</dd>
+          <dt>받는 형식</dt><dd><span class="json">{"changes": [{"kind": "weight", "key": "region", "value": 3, "why": "…"}]}</span>kind는 weight · filter · age · height · styles · interest, 최대 800토큰</dd>
+          <dt>프롬프트 규칙</dt><dd>사용자가 말한 것만 바꾸기(짐작 금지), 내 관심사에 없는 취미는 "관심사 추가"로 제안, why는 한 문장 존댓말</dd>
+          <dt>검증</dt><dd><b>허용 목록 검사</b>: 항목 8개·단계 5개(0·0.5·1·2·3)·거르기 8개·나이 19~60·키 140~210·스타일 5개·관심사 12개 밖은 버림, 이미 그 값이면 뺌</dd>
+          <dt>실패하면</dt><dd>키워드 규칙으로 해석 + "AI 연결 실패로 규칙으로 해석했어요". 어느 쪽이든 적용 전 1~3위 미리 보기, 적용 후 되돌리기</dd>
+        </dl>
+      </article>
+      <article class="use">
+        <div class="use-head"><div><h3>프로필 코치</h3><p class="where">내 정보 · <span class="mono">coach.js</span></p><span class="tag new">NEW</span></div><span class="num">LLM 5</span></div>
+        <dl class="spec">
+          <dt>언제</dt><dd>"AI에게 자기소개 코칭 받기"를 눌렀을 때 (자기소개가 있어야 함)</dd>
+          <dt>보내는 것</dt><dd>내 관심사, 자기소개, 질문 카드 답</dd>
+          <dt>받는 형식</dt><dd><span class="json">{"tips": ["…", "…", "…"], "example": "…"}</span>최대 700토큰</dd>
+          <dt>프롬프트 규칙</dt><dd>실제 문장을 짚는 조언 3개, 예시는 <b>사용자가 쓴 사실만</b>으로 2~3문장(없는 직업·취미 지어내기 금지), 200자 이내, 외모 평가·연락처 금지</dd>
+          <dt>검증</dt><dd>예시는 200자로 자르고, 조언도 예시도 없으면 실패. 예시는 저장하지 않고 편집 화면에 채워 사용자가 고쳐서 저장</dd>
+          <dt>실패하면</dt><dd>오류 문장 표시. 규칙 점검(100점 만점, 막연한 표현·싫은 것 위주·때가 없는 문장)은 항상 보임</dd>
+        </dl>
+      </article>
+      <article class="use" style="background: var(--sunk)">
+        <div class="use-head"><div><h3>참고: 임베딩은 LLM과 따로</h3><p class="where">추천 점수 · <span class="mono">intro-embed.js</span></p></div><span class="num" style="color:var(--brand);background:var(--brand-soft)">임베딩</span></div>
+        <dl class="spec">
+          <dt>모델</dt><dd><code>multilingual-e5-small</code>, 384차원, 방문자 브라우저 안에서 계산 (처음 한 번 약 135MB)</dd>
+          <dt>하는 일</dt><dd>자기소개의 뜻이 닮은 정도를 숫자로 바꿔 "자기소개" 항목(최대 10점)에 반영. 가장 닮은 문장 한 쌍을 근거로 보여 줌</dd>
+          <dt>차이</dt><dd>글을 만들지 않고 비교만 함. AI 설정과 상관없이 항상 켜져 있고, 소개글은 브라우저 밖으로 나가지 않음</dd>
+        </dl>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">무엇이 어디로 가나</p>
+      <h2>기능별로 LLM에 보내는 정보</h2>
+      <p class="lead">Claude를 고르면 Anthropic으로, 로컬 Ollama면 이 PC 안에서, AI 서버면 서버를 연 사람의 PC로 갑니다. 비밀번호, 사진, 이메일은 어느 기능도 보내지 않습니다.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>기능</th><th>내 프로필</th><th>상대 프로필</th><th>대화 내용</th><th>내가 쓴 글</th><th>부르는 때</th></tr></thead>
+        <tbody>
+          <tr><td>캐릭터 답장</td><td>요약 (이름·나이·직업·지역·관심사)</td><td>전체</td><td>지금까지 전부</td><td>보낸 메시지</td><td>메시지마다</td></tr>
+          <tr><td>안전 검사</td><td>없음</td><td>없음</td><td>받은 메시지 1개</td><td>없음</td><td>규칙 통과한 받은 메시지마다</td></tr>
+          <tr><td>첫 마디 추천</td><td>이름·나이·지역·관심사·자기소개</td><td>같은 항목</td><td>없음</td><td>없음</td><td>버튼 누를 때</td></tr>
+          <tr><td>AI 중매 상담</td><td>나이·성별·지역·관심사·희망 조건</td><td>없음</td><td>없음</td><td>상담 문장</td><td>버튼 누를 때</td></tr>
+          <tr><td>프로필 코치</td><td>관심사·자기소개·질문 카드</td><td>없음</td><td>없음</td><td>없음</td><td>버튼 누를 때</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">일부러 LLM을 쓰지 않은 곳</p>
+      <h2>점수와 판정은 규칙이 맡는다</h2>
+    </div>
+    <div class="split">
+      <article class="card box-no">
+        <h3>LLM 없이 규칙으로</h3>
+        <ul>
+          <li>거르기 조건 10개, 궁합 점수 8항목, 순위와 동점 규칙</li>
+          <li>"왜 이 분이 1위인가요?" 설명 문장</li>
+          <li>매칭 판정 (50점, 한마디가 있으면 45점)</li>
+          <li>보내기 전 안전 검사 (보내기가 늦어지지 않게)</li>
+          <li>데이트 코스 제안 (가게 이름을 지어내지 않게)</li>
+          <li>만남 후기로 중요도 조정</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h3>이유</h3>
+        <ul>
+          <li><b>설명할 수 있어야 한다.</b> "왜 이 사람이 1위인지"를 숫자와 문장으로 보여 주는 게 이 앱의 약속이라, 점수는 같은 입력에 늘 같은 답을 내는 규칙이 매깁니다.</li>
+          <li><b>LLM은 점수를 바꾸지 않고 장치를 고른다.</b> 중매 상담도 새 규칙을 만들지 않고, 이미 있는 중요도·조건만 바꾸자고 제안합니다. 그래서 바뀐 순위도 리포트로 설명됩니다.</li>
+          <li><b>지어내면 안 되는 곳은 규칙.</b> 데이트 장소처럼 LLM이 그럴듯하게 지어낼 수 있는 곳은 활동과 동선만 제안합니다.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">LLM 연결 세 가지</p>
+      <h2>누가 쓰느냐에 따라 고른다</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>연결</th><th>누가 쓸 수 있나</th><th>비용</th><th>대화가 가는 곳</th><th>막아 둔 것</th></tr></thead>
+        <tbody>
+          <tr><td>Claude</td><td>키를 넣은 사람</td><td>키 주인 부담</td><td>Anthropic</td><td>키는 그 브라우저 계정에만 저장</td></tr>
+          <tr><td>로컬 Ollama</td><td>Ollama가 켜진 이 PC</td><td>무료</td><td>이 PC 안</td><td>localhost에서 연 페이지만 연결 (Ollama 기본 설정)</td></tr>
+          <tr><td>인연노트 AI 서버</td><td>방문자 모두</td><td>무료 (서버 PC 전기)</td><td>서버를 연 PC</td><td>정해진 모델만, 허용 사이트만, IP당 1분 20번·전체 120번, 요청·답 길이 제한, Ollama 관리 기능 차단, 대화 기록 안 함</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">AI 서버는 <code>npm run ai-public</code>으로 Cloudflare 무료 터널을 열어 공개합니다. 공유기 포트를 열지 않고, 같은 와이파이의 다른 기기에서는 접속되지 않습니다.</p>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">이 PC에서 측정</p>
+      <h2>로컬 llama3.1:8b로 돌려 본 결과</h2>
+    </div>
+    <div class="meas">
+      <article class="card"><b>4 / 4</b><p>안전 검사 정답. 직장 위치 캐묻기, 투자 권유, 사진 요구는 잡고 등산 이야기는 통과</p></article>
+      <article class="card"><b>약 0.5초</b><p>받은 메시지 한 건을 AI로 검사하는 시간</p></article>
+      <article class="card"><b>44초</b><p>첫 캐릭터 답장. 모델을 메모리에 올리는 시간 포함, 이후는 몇 초</p></article>
+      <article class="card"><b>부족</b><p>llama3.1:8b는 한국어가 약해 동문서답과 이상한 낱말("가루빵")이 나옴. 새 프롬프트로 먼저 답하고 공감하는 구조는 좋아졌지만 모델 한계가 남음</p></article>
+    </div>
+    <p class="note">한국어에 강한 모델(EXAONE 3.5 7.8B, Qwen3 8B)로 같은 대화를 비교하는 중입니다. 중매 상담과 프로필 코치는 자동 테스트에서 가짜 AI 응답으로만 확인했습니다.</p>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">매칭 엔진</p>
+      <h2>거르고, 점수 매기고, 설명한다</h2>
+      <p class="lead">숫자는 모두 <code>js/rules.js</code> 한 파일에 있고, 화면과 테스트가 같은 값을 읽습니다.</p>
+    </div>
+    <div class="engine">
+      <article class="card">
+        <h3>① 거르기: 점수 전에 빼는 조건</h3>
+        <div class="funnel">
+          <div class="frow"><span class="pill always">항상</span>나 자신</div>
+          <div class="frow"><span class="pill always">항상</span>서로 관심 있는 성별이 아님</div>
+          <div class="frow"><span class="pill on">기본 켬</span>희망 나이 범위 밖</div>
+          <div class="frow"><span class="pill on">기본 켬</span>흡연자</div>
+          <div class="frow"><span class="pill on">기본 켬</span>결혼관이 정반대</div>
+          <div class="frow"><span class="pill">기본 끔</span>희망 키 범위 밖</div>
+          <div class="frow"><span class="pill">기본 끔</span>종교가 다름</div>
+          <div class="frow"><span class="pill">기본 끔</span>다른 권역</div>
+          <div class="frow"><span class="pill">기본 끔</span>돌싱</div>
+          <div class="frow"><span class="pill">기본 끔</span>자녀가 있음</div>
+        </div>
+      </article>
+      <article class="card">
+        <h3>② 점수: 항목별 기본 만점 (합계 100)</h3>
+        <div class="bars" id="bars" role="list" aria-label="항목별 기본 만점"></div>
+        <div class="axis" aria-hidden="true"><span></span><span class="ticks"><i style="left:0%">0</i><i style="left:28.57%">10</i><i style="left:57.14%">20</i><i style="left:85.71%">30</i></span><span></span></div>
+        <p class="note">빗금 막대는 임베딩으로 계산하는 항목입니다. 막대에 올리면 채점 규칙이 보입니다. 중요도 5단계(안 봄 ×0 ~ 매우 중요 ×3)로 만점을 다시 나누고, 합은 늘 100입니다.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">이번에 더한 것</p>
+      <h2>경쟁 앱을 참고한 기능, 새 디자인과 움직임</h2>
+    </div>
+    <div class="grid3">
+      <article class="card">
+        <div class="card-top"><h3>질문 카드 + 한마디</h3><span class="tag rule">규칙</span></div>
+        <p class="note">Hinge의 Prompts를 참고</p>
+        <ul><li>질문 8개 중 2개에 답해 프로필에 붙임</li><li>상대 카드에 한마디를 남기며 관심을 보내면 매칭 기준 50 → 45점</li><li>매칭되면 그 한마디가 첫 메시지, 상대가 그 말에 답하며 인사</li></ul>
+      </article>
+      <article class="card">
+        <div class="card-top"><h3>데이트 제안 · 내 차례</h3><span class="tag rule">규칙</span></div>
+        <p class="note">Hinge의 Your Turn을 참고</p>
+        <ul><li>공통 세부 취향과 사는 곳으로 코스 3개</li><li>첫 만남 안전 수칙 4가지</li><li>답할 차례인 대화를 목록 위로</li></ul>
+      </article>
+      <article class="card">
+        <div class="card-top"><h3>만남 후기</h3><span class="tag rule">규칙</span></div>
+        <p class="note">Hinge의 We Met을 참고</p>
+        <ul><li>"또 보고 싶어요": 잘 맞았던 항목 2개 중요도 ↑</li><li>"아니었어요": 고른 이유의 항목 중요도 ↑</li><li>상대에게 알리지 않고, 내 정보에서 되돌리기</li></ul>
+      </article>
+      <article class="card">
+        <div class="card-top"><h3>디자인 2.0</h3></div>
+        <ul><li>편지지 바탕에 깊은 장미색 하나, 제목·이름은 고운바탕</li><li>질문 카드는 줄 그은 편지지 모양</li><li>떠 있는 하단 탭, 다크 모드 따로 설계</li></ul>
+      </article>
+      <article class="card">
+        <div class="card-top"><h3>모션</h3></div>
+        <ul><li>화면이 열릴 때 카드가 차례로 떠오름, 점수 원·막대가 차오름</li><li>채팅은 새 메시지만 톡 올라옴</li><li>'동작 줄이기' 설정이면 모두 끔</li></ul>
+      </article>
+      <article class="card">
+        <div class="card-top"><h3>매칭 성공 연출</h3></div>
+        <ul><li>두 사진이 날아와 0.7초에 부딪힘</li><li>섬광, 충격파 2겹, 하트·꽃가루 120개, 짧은 진동</li><li>"매칭 성공!" 한 글자씩, 궁합 점수 올라가기</li></ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">파일 구조</p>
+      <h2>모두 브라우저 안에서 돌아간다</h2>
+    </div>
+    <article class="card">
+      <div class="layers">
+        <div class="layer"><span>화면</span><div class="mods"><span class="mod">app.js</span><span class="mod">style.css</span></div></div>
+        <div class="layer"><span>매칭 로직</span><div class="mods"><span class="mod">rules.js</span><span class="mod">matcher.js</span><span class="mod">profiles.js</span><span class="mod">prompts.js</span><span class="mod">dates.js</span><span class="mod">feedback.js</span></div></div>
+        <div class="layer"><span>임베딩</span><div class="mods"><span class="mod">intro-embed.js</span><span class="mod">embeddings.js</span></div></div>
+        <div class="layer"><span>LLM</span><div class="mods"><span class="mod llm">llm.js</span><span class="mod llm">chat.js</span><span class="mod llm">safety.js</span><span class="mod llm">starters.js</span><span class="mod llm">concierge.js</span><span class="mod llm">coach.js</span></div></div>
+        <div class="layer"><span>AI 서버</span><div class="mods"><span class="mod">server/ai-server.mjs</span><span class="mod">server/ai-public.mjs</span></div></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head">
+      <p class="eyebrow">남은 일</p>
+      <h2>실제 서비스가 되려면</h2>
+    </div>
+    <div class="next">
+      <article class="card"><h3>데이터가 브라우저에만 있음</h3><p>계정과 대화가 그 브라우저에만 저장됩니다. 실제 회원끼리 만나려면 Firebase나 Supabase 같은 백엔드가 필요합니다.</p></article>
+      <article class="card"><h3>프롬프트를 브라우저가 보냄</h3><p>AI 서버를 공개하면 횟수 제한 안에서 다른 용도로 쓸 수 있습니다. 서버가 프롬프트를 직접 만들도록 바꾸면 막을 수 있습니다.</p></article>
+      <article class="card go"><h3>바꿀 곳은 한 군데</h3><p>LLM 호출은 <code>llm.js</code> 한 곳에 모여 있어, 서버로 옮기거나 모델을 바꿔도 다섯 기능의 코드는 그대로입니다.</p></article>
+    </div>
+  </section>
+
+  <footer>2026년 10월 21일 기준 · 인연노트 저장소의 코드, 자동 테스트 81개, 이 PC에서의 측정으로 정리했습니다.</footer>
+</div>
+
+<script>
+(() => {
+  const ITEMS = [
+    ['관심사', 35, '겹치는 관심사 1개당 10점. 둘 다 세부 취향을 골랐는데 하나도 안 겹치면 6점'],
+    ['결혼관', 15, '같으면 15점, 한 단계 차이 7점, 정반대 0점'],
+    ['자기소개', 10, '뜻이 아주 비슷하면 10점, 꽤 비슷하면 6점, 조금 비슷하면 3점 (문장 임베딩)', true],
+    ['거리', 10, '같은 지역 10점, 같은 권역 5점'],
+    ['나이 차', 10, '2살 이내 10점, 4살 이내 6점, 6살 이내 3점'],
+    ['종교', 10, '같으면 10점'],
+    ['외모', 5, '선호 스타일이면 3점 + 키가 희망 범위 안이면 2점'],
+    ['생활습관', 5, '흡연 여부 같으면 3점 + 음주 빈도 같으면 2점'],
+  ];
+  const SCALE = 35;
+  const box = document.getElementById('bars');
+  const tip = document.createElement('div');
+  tip.className = 'tip';
+  tip.hidden = true;
+  box.append(tip);
+  ITEMS.forEach(([label, max, rule, ai]) => {
+    const row = document.createElement('div');
+    row.className = 'bar';
+    row.tabIndex = 0;
+    row.setAttribute('role', 'listitem');
+    row.setAttribute('aria-label', `${label} ${max}점. ${rule}`);
+    if (ai) row.dataset.ai = '';
+    row.innerHTML = `<span>${label}</span><span class="track"><i class="fill" style="width:${(max / SCALE) * 100}%"></i></span><b>${max}</b>`;
+    const show = () => {
+      tip.textContent = `${label} 최대 ${max}점 · ${rule}`;
+      tip.hidden = false;
+      tip.style.top = `${row.offsetTop + row.offsetHeight + 4}px`;
+      tip.style.left = `${Math.min(row.offsetLeft + 72, Math.max(0, box.clientWidth - 280))}px`;
+    };
+    const hide = () => { tip.hidden = true; };
+    row.addEventListener('mouseenter', show);
+    row.addEventListener('focus', show);
+    row.addEventListener('mouseleave', hide);
+    row.addEventListener('blur', hide);
+    box.insertBefore(row, tip);
+  });
+})();
+</script>
+
+</body>
+</html>

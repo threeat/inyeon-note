@@ -16,10 +16,38 @@
 - 매칭되면 상대가 먼저 인사를 보내고, '채팅' 탭에서 대화합니다.
 - 가상 회원은 모두 **AI 캐릭터**이고 자기 프로필(직업, 지역, 관심사, 말투)대로 답합니다.
   - **기본 대화:** API 키 없이 바로 쓸 수 있습니다. 프로필을 바탕으로 한 규칙형 대답입니다.
-  - **AI 대화:** '내 정보 → AI 대화 설정'에 Claude API 키를 넣으면 Claude(`claude-opus-5-5`, effort `low`)가 캐릭터를 연기합니다.
-    공식 SDK(`@anthropic-ai/sdk@0.129.0`)를 CDN에서 불러와 브라우저에서 바로 호출합니다. 안전 거절이 나오면 다른 모델로 넘기는 `fallbacks: "default"`가 켜져 있습니다.
-    키가 틀리거나 연결이 안 되면 이유를 보여 주고 기본 대화로 이어 갑니다.
+  - **AI 대화:** '내 정보 → AI 대화 설정'에서 AI 종류를 고르면 LLM이 캐릭터를 연기합니다.
+    - **Claude:** API 키를 넣으면 Claude(`claude-opus-5-5`, effort `low`)를 씁니다. 공식 SDK(`@anthropic-ai/sdk@0.129.0`)를 CDN에서 불러와
+      브라우저에서 바로 호출하고, 안전 거절이 나오면 다른 모델로 넘기는 `fallbacks: "default"`가 켜져 있습니다.
+    - **로컬 AI (Ollama):** 내 PC에서 돌아가는 Ollama를 씁니다. 키와 요금이 없고 대화가 PC 밖으로 나가지 않습니다.
+    - **AI 서버:** 인연노트 AI 서버([`server/ai-server.mjs`](server/ai-server.mjs))를 거쳐 서버 주인의 Ollama를 씁니다.
+      GitHub Pages 방문자도 키 없이 AI를 쓸 수 있습니다. 아래 '인연노트 AI 서버'를 보세요.
+      설치된 대화용 모델을 자동으로 찾아 고를 수 있습니다 (`bge-m3` 같은 임베딩 전용 모델은 뺍니다).
+    - 연결이 안 되면 이유를 보여 주고 기본 대화로 이어 갑니다.
   - ⚠️ 브라우저에서 키를 쓰는 방식은 개인 데모용입니다. 키는 그 브라우저에 저장되고 요금은 키 주인에게 청구되니, 공개 배포에서는 서버를 거쳐 호출해야 합니다.
+    LLM 호출은 모두 [`js/llm.js`](js/llm.js) 한 곳을 거치므로, 서버로 옮길 때는 이 파일만 바꾸면 됩니다.
+
+**경쟁 앱을 참고해 더한 기능** (모두 AI 없이도 규칙으로 동작하고, AI가 켜져 있으면 더 자연스러워집니다)
+
+| 기능 | 참고한 앱 | 하는 일 | 파일 |
+|---|---|---|---|
+| AI 중매 상담 | Facebook Dating AI 도우미, Tinder Chemistry | 원하는 분을 말로 설명하면 중요도·거르기 조건·나이·키·스타일 변경안을 이유와 함께 보여 주고, 적용 전후 1~3위를 비교한 뒤 적용·되돌리기 | [`js/concierge.js`](js/concierge.js) |
+| 질문 카드 + 한마디 | Hinge Prompts | 질문 카드 2장에 답하고, 상대 카드나 자기소개에 한마디를 남기며 관심을 보냄. 한마디가 있으면 매칭 기준 50점 → 45점, 매칭되면 그 한마디가 첫 메시지 | [`js/prompts.js`](js/prompts.js) |
+| 프로필 코치 | Bumble 프로필 가이드, Hinge Prompt Feedback | 사진·자기소개·질문 카드·세부 취향 점검(100점), 막연한 표현·싫은 것 위주 문장 짚기, 고치면 매칭에 무엇이 좋아지는지 안내. AI는 고쳐 쓴 예시 제안 | [`js/coach.js`](js/coach.js) |
+| 데이트 제안 · 내 차례 | Hinge Your Turn | 공통 관심사·세부 취향과 사는 곳으로 데이트 코스 3개와 첫 만남 안전 수칙. 채팅 목록에서 내가 답할 차례인 대화를 위로 | [`js/dates.js`](js/dates.js) |
+| 만남 후기 | Hinge We Met | "또 보고 싶어요"면 잘 맞았던 항목, "아니었어요"면 고른 이유의 항목 중요도를 한 단계 올림. 상대에게 알리지 않고, 내 정보에서 되돌리기 | [`js/feedback.js`](js/feedback.js) |
+
+기존 데이터(가상 회원 20명의 정보·자기소개·임베딩, 점수표, 저장된 계정)는 그대로이고, 가상 회원에 질문 카드 답만 더했습니다.
+예전에 가입한 계정도 새 항목이 비어 있는 채로 그대로 열립니다.
+
+**채팅 안전 검사** ([`js/safety.js`](js/safety.js))
+- **보내기 전:** 내 메시지에 전화번호·카톡 아이디, 계좌·송금·투자, 외부 링크, 주민등록번호, 성적인 표현, 욕설이 있으면 이유를 먼저 보여 줍니다.
+  같은 메시지를 한 번 더 보내면 그대로 보냅니다.
+- **받은 메시지:** 같은 규칙으로 검사하고, 규칙에 걸리지 않으면 AI가 돌려 말한 위험(직장 위치 캐묻기, 투자 권유, 사진 요구 등)을 한 번 더 판단합니다.
+  위험하면 메시지 아래에 경고를 붙입니다. AI가 꺼져 있거나 실패하면 규칙 검사만 합니다.
+
+**첫 마디 추천** ([`js/starters.js`](js/starters.js)): 매칭 후 내가 아직 말을 걸지 않았으면 채팅방에 첫 메시지 후보 3개를 보여 줍니다.
+공통 관심사·세부 취향·지역으로 바로 만들고, AI가 켜져 있으면 'AI로 맞춤 추천 받기'로 두 사람 자기소개까지 읽은 문장을 받습니다. 누르면 입력칸에 들어가 고쳐서 보낼 수 있습니다.
 
 **돌싱 여부**: 가입할 때 '결혼 경험(미혼 / 돌싱(자녀 없음) / 돌싱(자녀 있음))'을 받고 프로필에 보여줍니다.
 절대 조건에 '돌싱이면 제외', '자녀가 있으면 제외'를 켤 수 있습니다(기본은 꺼짐). 점수에는 반영하지 않습니다.
@@ -183,6 +211,72 @@ git push -u origin main
 GitHub 저장소에서 **Settings → Pages → Branch: `main` / `(root)`**를 고르고 저장하면
 `https://<내 아이디>.github.io/inyeon-note/`에 배포됩니다.
 
+### 로컬 AI (Ollama) 연결하기
+
+```bash
+ollama pull llama3.1:8b   # 대화용 모델 하나 받기 (한국어에 강한 모델일수록 대화가 자연스럽습니다)
+npx serve .               # http://localhost:3000 같은 주소로 열기
+```
+
+- **localhost에서 연 페이지**는 Ollama가 기본으로 허용합니다. '내 정보 → AI 대화 설정 → 로컬 AI'를 고르면 됩니다.
+- **`index.html`을 더블클릭해 연 페이지**(`file://`)는 Ollama가 막습니다. 위처럼 로컬 서버로 열어 주세요.
+- **GitHub Pages에서** 내 PC의 Ollama를 쓰려면, Ollama를 켜기 전에 사이트 주소를 허용해야 합니다.
+  Windows는 `setx OLLAMA_ORIGINS "https://<내 아이디>.github.io"`를 실행한 뒤 Ollama를 다시 켭니다.
+  이 설정은 **내 PC에서만** 효과가 있습니다. 다른 방문자에게는 로컬 AI가 연결되지 않고 기본 대화와 규칙 검사로 동작합니다.
+
+### 인연노트 AI 서버: 방문자 모두가 내 Ollama를 쓰게 하기
+
+[`server/ai-server.mjs`](server/ai-server.mjs)는 Ollama 앞에 두는 작은 API 서버입니다. 외부 라이브러리 없이 Node만으로 돕니다.
+Ollama를 그대로 인터넷에 열면 누구나 모델을 받거나 지울 수 있어서, 이 서버는 **정해진 모델로 답장 만들기 하나만** 열어 줍니다.
+
+| 주소 | 하는 일 |
+|---|---|
+| `POST /v1/complete` | `{ system, messages, maxTokens?, json? }` → `{ text }` |
+| `GET /health` | `{ ok, model, ollama }` (Ollama가 켜져 있고 모델이 있는지) |
+
+막는 것: 허용 목록에 없는 사이트, IP당 1분 20번 초과, 큰 요청(본문 64KB, 메시지 40개, 메시지 하나 2,000자), 요청으로 모델 바꾸기,
+1,024토큰을 넘는 답장, Ollama의 다른 기능(`/api/pull`, `/api/delete` 등). Ollama는 한 번에 하나씩 답하므로 요청은 줄을 세우고, 8개 넘게 밀리면 거절합니다.
+
+```powershell
+npm run ai-server   # 내 PC에서만 쓰기: http://127.0.0.1:8787
+npm run ai-public   # 인터넷에 열기: 서버 + Cloudflare 무료 터널을 함께 켜고 https://….trycloudflare.com 주소를 알려 줌
+```
+
+`ai-public`은 무료이고 가입이 필요 없습니다([cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/) 설치만 필요:
+`winget install Cloudflare.cloudflared`). 켜기 전에 Ollama와 모델을 확인하고, 같은 포트에 다른 서버가 떠 있으면 멈춥니다.
+허용 사이트에는 `https://threeat.github.io`가 들어 있습니다 ([`server/ai-public.mjs`](server/ai-public.mjs)의 `SITE`).
+
+**공개해도 안전하게 해 둔 것** (2026-10-21 공개 주소로 직접 확인)
+
+| 위험 | 막는 방법 | 확인 결과 |
+|---|---|---|
+| 집 공유기·IP 노출 | 터널은 PC에서 Cloudflare로 나가는 연결이라 포트를 열지 않음 | 방문자에게는 Cloudflare 주소만 보임 |
+| 같은 와이파이의 다른 기기 접속 | 서버는 `127.0.0.1`에서만 받음 | 내부 IP로 접속하면 연결 거부 |
+| 모델 받기·지우기 | `/v1/complete`, `/health` 말고는 없음 | `/api/pull`, `/api/delete` → 404 |
+| 다른 사이트가 몰래 호출 | 허용 목록에 없는 사이트는 403 | `evil.example` → 403 |
+| 한 사람이 GPU를 독차지 | IP당 1분 20번, 전체 1분 120번, 대기 8개 | 21번째부터 429 |
+| IP를 속여 제한 피하기 | 터널 뒤에서만 Cloudflare IP 헤더를 믿음 | 헤더를 꾸민 요청은 Cloudflare가 거절 |
+| 대화 내용 유출 | 서버는 대화를 저장하거나 기록하지 않음, 응답 캐시 금지 | |
+
+| 환경변수 | 기본값 | 뜻 |
+|---|---|---|
+| `MODEL` | `llama3.1:8b` | 답장에 쓸 Ollama 모델 |
+| `ALLOWED_ORIGINS` | `http://localhost:*,http://127.0.0.1:*` | 호출을 허용할 페이지 주소 (쉼표로 구분) |
+| `RATE_LIMIT` | `20` | IP 하나가 1분에 보낼 수 있는 요청 수 |
+| `GLOBAL_RATE_LIMIT` | `120` | 모든 IP를 합쳐 1분에 받는 요청 수 |
+| `HOST` | `127.0.0.1` | 요청을 받을 주소. 바꾸지 마세요 (같은 와이파이에 열림) |
+| `ACCESS_KEY` | 없음 | 정하면 앱 설정에 같은 키를 넣은 사람만 쓸 수 있음 |
+| `TRUST_CF_IP` | 꺼짐 | Cloudflare Tunnel 뒤에서만 `1` (`ai-public`은 자동으로 켬). 터널 없이 켜면 IP를 속여 횟수 제한을 피할 수 있음 |
+| `PORT` · `OLLAMA_URL` | `8787` · `http://localhost:11434` | 서버 포트와 Ollama 주소 |
+
+앱에서는 '내 정보 → AI 대화 설정 → AI 서버'에 터널 주소를 넣습니다. 방문자가 아무 설정 없이 처음부터 쓰게 하려면
+[`js/llm.js`](js/llm.js)의 `AI_SERVER_URL`에 주소를 적고 다시 배포하세요.
+
+- ⚠️ 서버를 연 PC가 켜져 있고 Ollama와 서버, 터널이 모두 돌고 있어야 방문자가 AI를 쓸 수 있습니다. PC가 꺼지면 앱은 기본 대화로 돌아갑니다.
+- ⚠️ 방문자의 대화가 서버를 연 PC로 보내집니다. 실제 서비스라면 개인정보 처리방침에 적고 동의를 받아야 합니다.
+- ⚠️ `trycloudflare.com` 주소는 터널을 다시 켤 때마다 바뀝니다. 고정 주소가 필요하면 Cloudflare 계정에 도메인을 연결한 이름 있는 터널을 쓰세요.
+- `ACCESS_KEY`는 GitHub Pages 코드에 넣으면 누구나 볼 수 있으니, 공개용이 아니라 나와 지인만 쓰게 할 때 쓰세요.
+
 ## 파일 구조
 
 ```
@@ -196,6 +290,17 @@ inyeon-note/
 ├── js/embeddings.js   가상 회원 소개글 임베딩 (자동 생성)
 ├── scripts/build-embeddings.mjs  embeddings.js를 만드는 스크립트
 ├── js/matcher.js       핵심 로직: 거르기 → 점수 → 순위 → 1위 이유 (화면 코드 없음)
+├── js/prompts.js       질문 카드 목록과 정리
+├── js/concierge.js     AI 중매 상담: 말 → 조건 변경안
+├── js/coach.js         프로필 코치
+├── js/dates.js         데이트 제안, 내 차례
+├── js/feedback.js      만남 후기 → 중요도 조정
+├── js/hangul.js        받침에 맞는 조사
+├── js/llm.js           LLM 연결 층: Claude / 로컬 Ollama (AI 호출은 모두 여기를 거침)
+├── js/chat.js          캐릭터 대화: AI 답장, 규칙형 기본 대화
+├── js/safety.js        채팅 안전 검사: 규칙 + AI 판단
+├── js/starters.js      첫 마디 추천: 규칙 + AI
 ├── js/app.js           입력을 읽고 결과를 그리는 화면 코드
-└── tests/matcher.test.js  로직 테스트
+├── server/ai-server.mjs  인연노트 AI 서버: Ollama 앞의 API 서버 (npm run ai-server)
+└── tests/              로직 테스트 (matcher, chat, llm·안전 검사·첫 마디, AI 서버)
 ```

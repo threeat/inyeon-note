@@ -1,44 +1,53 @@
 :root {
-  --bg: #f3f0ee;
-  --app: #ffffff;
+  /* 인연노트 2.0: 따뜻한 편지지 바탕 + 깊은 장미색 하나. 제목·이름은 고운바탕, 본문은 Pretendard */
+  --bg: #f4ebe4;
+  --app: #fffaf6;
   --card: #ffffff;
-  --sunk: #f7f4f2;
-  --text: #1d1b1a;
-  --muted: #77706b;
-  --line: #ece7e3;
-  --brand: #e5486f;
-  --brand-2: #ff7a8a;
-  --brand-soft: #fdebef;
-  --ok: #2f8a62;
-  --warn: #a35d00;
-  --warn-bg: #fff5e6;
-  --c-interests: #e5486f;
-  --c-marriage: #7b5cd6;
-  --c-looks: #f09a3e;
-  --c-region: #2f8fb8;
-  --c-age: #3aa37a;
-  --c-religion: #9a8466;
-  --c-lifestyle: #9aa3ad;
-  --c-intro: #c9a227;
-  --shadow: 0 2px 10px rgba(40, 20, 20, .06);
-  --radius: 18px;
+  --sunk: #f7efe9;
+  --text: #251a1d;
+  --muted: #7b6b6e;
+  --line: #ecdfd7;
+  --brand: #d4335c;
+  --brand-2: #e9566f;
+  --brand-ink: #b02149;
+  --brand-soft: #fce9ee;
+  --ok: #2c8460;
+  --warn: #9b5600;
+  --warn-bg: #fff3e2;
+  --c-interests: #d4335c;
+  --c-marriage: #7656cf;
+  --c-looks: #e8913a;
+  --c-region: #2b88b1;
+  --c-age: #34996f;
+  --c-religion: #957f62;
+  --c-lifestyle: #97a0aa;
+  --c-intro: #c49b1f;
+  --shadow: 0 1px 2px rgba(70, 30, 40, .05), 0 6px 22px rgba(70, 30, 40, .07);
+  --shadow-lg: 0 2px 6px rgba(70, 30, 40, .06), 0 18px 44px rgba(70, 30, 40, .12);
+  --radius: 22px;
+  --font-body: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: "Gowun Batang", "AppleMyungjo", "Batang", serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f0e0e;
-    --app: #171515;
-    --card: #211e1e;
-    --sunk: #2a2626;
-    --text: #f2eeeb;
-    --muted: #a69e98;
-    --line: #353030;
-    --brand: #ff6b8d;
-    --brand-soft: #3d2128;
+    --bg: #110d0e;
+    --app: #181315;
+    --card: #211a1d;
+    --sunk: #2a2225;
+    --text: #f5ecee;
+    --muted: #ad9ca0;
+    --line: #382d31;
+    --brand: #ff6b8e;
+    --brand-2: #ff8aa1;
+    --brand-ink: #ff9bb4;
+    --brand-soft: #3f1f29;
     --ok: #5cc292;
     --warn: #f3c27a;
-    --warn-bg: #3a2e18;
-    --shadow: none;
+    --warn-bg: #3a2c17;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    --shadow-lg: 0 18px 44px rgba(0, 0, 0, .45);
+    color-scheme: dark;
   }
 }
 
@@ -48,7 +57,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  font-family: var(--font-body);
   line-height: 1.5;
   word-break: keep-all;
 }
@@ -166,7 +175,7 @@ h1, h2, h3 { margin: 0; line-height: 1.3; }
 .field-label { font-size: .85rem; font-weight: 600; color: var(--muted); }
 .field-hint { font-size: .8rem; color: var(--muted); margin: 0; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-input[type="text"], input[type="number"], input[type="email"], input[type="password"], select, .field textarea {
+input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="url"], select, .field textarea {
   font: inherit;
   font-size: 1rem;
   color: var(--text);
@@ -595,6 +604,29 @@ input:focus, select:focus, .field textarea:focus { border-color: var(--brand); o
 }
 .send:disabled { opacity: .5; cursor: wait; }
 
+/* 대화 시작 추천 */
+.starters { margin-top: 8px; padding: 12px; border-radius: 16px; background: var(--app); display: flex; flex-direction: column; gap: 8px; }
+.st-head { margin: 0; font-size: .82rem; font-weight: 700; color: var(--muted); }
+.st-list { display: flex; flex-direction: column; gap: 6px; }
+.st-chip {
+  text-align: left; font: inherit; font-size: .88rem; line-height: 1.4; color: var(--text); cursor: pointer;
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 9px 12px;
+}
+.st-chip:hover, .st-chip:focus-visible { border-color: var(--brand); }
+.starters .link { align-self: flex-start; padding: 0; font-size: .84rem; }
+.starters .link:disabled { color: var(--muted); cursor: wait; }
+
+/* 안전 안내: 받은 메시지 아래(theirs), 보내기 전 입력칸 위(mine) */
+.safety-note {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 14px;
+  background: var(--warn-bg); color: var(--warn); font-size: .82rem; line-height: 1.45;
+}
+.safety-note b { font-size: .84rem; }
+.safety-note p { margin: 0; }
+.safety-note small { opacity: .85; }
+.safety-note.theirs { align-self: flex-start; max-width: 86%; margin-left: 38px; }
+.safety-note.mine { margin: 0 12px 8px; }
+
 /* ---------- 매칭 성공 팝업 ---------- */
 .overlay {
   position: fixed; inset: 0; z-index: 20;
@@ -617,7 +649,7 @@ input:focus, select:focus, .field textarea:focus { border-color: var(--brand); o
 .match-card small { color: var(--muted); margin-bottom: 6px; }
 
 /* ---------- AI 대화 설정 ---------- */
-.ai-state { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: .92rem; }
+.ai-state { display: flex; align-items: center; gap: 8px; margin: 12px 0; font-size: .92rem; }
 .dot-state { width: 9px; height: 9px; border-radius: 50%; background: var(--line); flex: none; }
 .dot-state.on { background: var(--ok); }
 .key-row { display: flex; align-items: center; gap: 8px; }
@@ -668,3 +700,438 @@ input:focus, select:focus, .field textarea:focus { border-color: var(--brand); o
   max-width: calc(100% - 32px);
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+.server-form { display: flex; flex-direction: column; gap: 8px; }
+.server-form > input { width: 100%; }
+
+/* ---------- AI 중매 상담 ---------- */
+.consult .card-head h2 { font-size: 1.05rem; }
+.cs-by { font-size: .72rem; color: var(--muted); background: var(--sunk); padding: 3px 8px; border-radius: 999px; }
+.cs-form { display: flex; gap: 8px; align-items: flex-end; }
+.cs-form textarea {
+  flex: 1; min-width: 0; resize: none; font: inherit; font-size: .95rem; color: var(--text);
+  background: var(--sunk); border: 1.5px solid transparent; border-radius: 14px; padding: 10px 12px;
+}
+.cs-form textarea:focus { outline: none; border-color: var(--brand); }
+.consult .chips { margin-top: 10px; }
+.consult .chips .chip { text-align: left; }
+.cs-result { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.cs-title { margin: 0; font-size: .84rem; font-weight: 700; }
+.cs-changes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.cs-changes li { background: var(--brand-soft); border-radius: 12px; padding: 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cs-changes b { color: var(--brand); font-size: .9rem; }
+.cs-changes small { color: var(--text); font-size: .8rem; }
+.cs-compare { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; }
+.cs-rank { background: var(--sunk); border-radius: 12px; padding: 8px 10px; font-size: .82rem; min-width: 0; }
+.cs-rank > span { font-weight: 700; font-size: .76rem; color: var(--muted); }
+.cs-rank ol { margin: 4px 0; padding-left: 18px; }
+.cs-rank small { color: var(--muted); }
+.cs-arrow { color: var(--muted); }
+.cs-undo { margin: 10px 0 0; font-size: .84rem; color: var(--muted); }
+.note-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+
+/* ---------- 질문 카드와 한마디 ---------- */
+.prompt-list { display: flex; flex-direction: column; gap: 10px; }
+.prompt-card { background: var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border: 1px solid var(--line); }
+.card .prompt-card { box-shadow: none; background: var(--sunk); border: 0; }
+.pc-q { margin: 0; font-size: .8rem; font-weight: 700; color: var(--muted); }
+.pc-a { margin: 4px 0 0; font-size: 1.05rem; font-weight: 600; line-height: 1.45; }
+.note-btn {
+  margin-top: 10px; width: 100%; text-align: left; cursor: pointer; font: inherit; font-size: .86rem; color: var(--brand); font-weight: 600;
+  background: var(--brand-soft); border: 0; border-radius: 12px; padding: 9px 12px;
+}
+.note-compose { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.note-compose textarea {
+  resize: none; font: inherit; font-size: .95rem; color: var(--text); background: var(--app);
+  border: 1.5px solid var(--brand); border-radius: 12px; padding: 10px 12px;
+}
+.note-compose .hint { margin: 0; }
+.note-compose .safety-note.mine { margin: 0; }
+.note-sent { margin: 10px 0 0; font-size: .84rem; color: var(--muted); }
+.prompt-edit { display: flex; flex-direction: column; gap: 6px; }
+.prompt-edit textarea {
+  resize: none; font: inherit; font-size: 1rem; color: var(--text); background: var(--app);
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px;
+}
+.prompt-edit textarea:focus { outline: none; border-color: var(--brand); }
+
+/* ---------- 프로필 코치 ---------- */
+.coach-score { font-size: .85rem; color: var(--muted); }
+.coach-score b { font-size: 1.2rem; color: var(--brand); }
+.coach-list { margin: 10px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.coach-list li { display: flex; flex-direction: column; gap: 2px; font-size: .9rem; }
+.coach-list li.ok { color: var(--muted); }
+.coach-list li.ok span { color: var(--ok); }
+.coach-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-weight: 600; }
+.coach-list p { margin: 0; font-size: .84rem; }
+.coach-list small { color: var(--muted); font-size: .78rem; }
+.coach-ai { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+.coach-ai .btn { align-self: flex-start; }
+.coach-result { display: flex; flex-direction: column; gap: 8px; }
+.coach-result ul { margin: 0; padding-left: 18px; font-size: .88rem; display: flex; flex-direction: column; gap: 4px; }
+.coach-result .link { align-self: flex-start; padding: 0; }
+.learned { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.learned li { background: var(--sunk); border-radius: 12px; padding: 10px 12px; font-size: .88rem; }
+.learned p { margin: 4px 0 0; }
+.learned small { color: var(--muted); }
+.learned .link { padding: 4px 0 0; }
+
+/* ---------- 채팅: 내 차례, 데이트 제안, 만남 후기 ---------- */
+.turn { font-style: normal; font-size: .68rem; font-weight: 700; color: var(--brand); background: var(--brand-soft); padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 2px; }
+.date-btn {
+  margin-left: auto; flex: none; cursor: pointer; font: inherit; font-size: .8rem; font-weight: 600; color: var(--brand);
+  background: var(--brand-soft); border: 1.5px solid transparent; border-radius: 999px; padding: 6px 10px;
+}
+.date-btn.on { border-color: var(--brand); }
+.date-ideas { margin: 0 12px 8px; padding: 12px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px; }
+.date-idea { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid var(--line); }
+.date-idea > div { min-width: 0; }
+.date-idea b { font-size: .9rem; }
+.date-idea p { margin: 2px 0; font-size: .86rem; }
+.date-idea small { color: var(--muted); font-size: .78rem; }
+.date-idea .btn { flex: none; }
+.date-safety { font-size: .82rem; color: var(--muted); }
+.date-safety summary { cursor: pointer; font-weight: 600; }
+.date-safety ul { margin: 6px 0 0; padding-left: 18px; }
+.bubble-quote { display: block; font-size: .76rem; opacity: .85; border-left: 2px solid currentColor; padding-left: 8px; margin-bottom: 4px; }
+.met-card { margin-top: 8px; padding: 12px; border-radius: 16px; background: var(--app); display: flex; flex-direction: column; gap: 8px; }
+.met-card .hint { margin: 0; }
+.met-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* =====================================================================
+   디자인 2.0: 아래는 위 규칙을 다듬는 덮어쓰기다. 클래스 이름은 그대로라 화면 코드는 바뀌지 않는다.
+   ===================================================================== */
+
+/* ---------- 바탕과 앱 틀 ---------- */
+body {
+  font-size: 15px;
+  letter-spacing: -.01em;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(circle at 12% 8%, color-mix(in srgb, var(--brand) 9%, transparent) 0, transparent 38%),
+    radial-gradient(circle at 88% 92%, color-mix(in srgb, var(--c-marriage) 8%, transparent) 0, transparent 40%),
+    var(--bg);
+  background-attachment: fixed;
+}
+@media (min-width: 600px) {
+  .app { box-shadow: 0 0 0 1px var(--line), var(--shadow-lg); }
+}
+::selection { background: var(--brand-soft); color: var(--brand-ink); }
+
+/* 제목과 이름은 고운바탕으로 */
+.page-head h1, .title, .welcome h1, .hero-info h1, .hero-info h2, .match-title, .analyzing h1,
+.section-title, .brand, .me-card h2, .pc-info b, .chat-who b {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.page-head h1 { font-size: 1.85rem; }
+.title { font-size: 1.75rem; line-height: 1.3; }
+
+/* ---------- 버튼 ---------- */
+.btn { border-radius: 16px; letter-spacing: -.01em; transition: transform .12s, box-shadow .2s, background .2s; }
+.btn.primary {
+  background: var(--brand); color: #fff;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.btn.primary:hover { background: var(--brand-ink); }
+.btn.ghost { background: var(--card); border: 1.5px solid var(--line); }
+.btn.ghost:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); }
+.btn.liked { background: var(--brand-soft); color: var(--brand-ink); }
+.link { color: var(--brand-ink); }
+.muted-link, .danger-link { color: var(--muted); }
+
+/* ---------- 카드 ---------- */
+.card { border-color: color-mix(in srgb, var(--line) 70%, transparent); padding: 20px; }
+.card h2 { font-size: 1.05rem; letter-spacing: -.02em; }
+.content { gap: 18px; }
+
+/* ---------- 첫 화면 ---------- */
+.welcome { background: radial-gradient(120% 60% at 50% 0%, var(--brand-soft), transparent 70%), var(--app); }
+.welcome h1 { font-size: 2.6rem; }
+.welcome .hero > p { font-size: 1.12rem; }
+.welcome .hero > p b { color: var(--brand-ink); font-family: var(--font-display); font-size: 1.2em; }
+.stack-card { border-radius: 24px; border-width: 5px; box-shadow: var(--shadow-lg); }
+.stack-heart { background: var(--brand); box-shadow: 0 8px 20px color-mix(in srgb, var(--brand) 40%, transparent); }
+.promise li { border: 1px solid var(--line); box-shadow: none; padding: 13px 16px; border-radius: 14px; }
+
+/* ---------- 브랜드 표시 ---------- */
+.brand { font-size: 1.25rem; color: var(--text); }
+.brand-mark, .logo { background: var(--brand); }
+.date { font-family: var(--font-display); font-size: .95rem; color: var(--brand-ink); }
+
+/* ---------- 1위 카드 ---------- */
+.card.hero-card { border: 0; box-shadow: var(--shadow-lg); border-radius: 28px; padding: 0; }
+.hero-photo .badge { background: rgba(255, 255, 255, .92); color: #b02149; box-shadow: var(--shadow); }
+.hero-info { background: linear-gradient(to top, rgba(20, 8, 12, .72), rgba(20, 8, 12, .2) 70%, transparent); padding-top: 64px; }
+.hero-info h2, .hero-info h1 { font-size: 2rem; }
+.hero-body { padding: 18px 20px 20px; gap: 16px; }
+.quote { font-family: var(--font-display); line-height: 1.6; color: color-mix(in srgb, var(--text) 85%, var(--muted)); }
+.quote.big { font-size: 1.12rem; }
+.why { background: var(--sunk); border: 1px solid var(--line); }
+.why h3 { color: var(--brand-ink); }
+.ring { --size: 80px; box-shadow: var(--shadow); }
+.ring b { color: var(--brand-ink); font-family: var(--font-display); }
+
+/* 다른 추천 사진 카드 */
+.grid { gap: 12px; }
+.pcard { border-radius: 20px; box-shadow: var(--shadow); }
+.pc-score { background: rgba(255, 255, 255, .94); color: #b02149; }
+.pc-info { padding: 44px 12px 12px; background: linear-gradient(to top, rgba(20, 8, 12, .78), transparent); }
+.pc-info b { font-size: 1.12rem; }
+
+/* ---------- 질문 카드: 편지지 느낌 ---------- */
+.prompt-card {
+  position: relative; border: 0; border-radius: 20px; padding: 18px 18px 16px;
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 27px, color-mix(in srgb, var(--line) 80%, transparent) 27px 28px) 0 44px / 100% calc(100% - 52px) no-repeat,
+    var(--card);
+}
+.card .prompt-card { background-color: var(--sunk); }
+.pc-q { color: var(--brand-ink); letter-spacing: .02em; }
+.pc-a { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; line-height: 1.55; }
+.note-btn { border: 1.5px dashed color-mix(in srgb, var(--brand) 45%, transparent); background: transparent; color: var(--brand-ink); }
+.note-btn:hover { background: var(--brand-soft); }
+
+/* ---------- AI 중매 상담 ---------- */
+.consult {
+  border: 0;
+  background: linear-gradient(160deg, var(--brand-soft), var(--card) 65%);
+  box-shadow: var(--shadow);
+}
+.cs-by { background: var(--card); border: 1px solid var(--line); }
+.cs-form textarea { background: var(--card); border-color: var(--line); }
+.consult .chips .chip { background: var(--card); border-color: var(--line); font-size: .82rem; }
+.cs-changes li { background: var(--card); border: 1px solid var(--line); }
+.cs-changes b { color: var(--brand-ink); }
+.cs-rank { background: var(--card); border: 1px solid var(--line); }
+
+/* ---------- 프로필 코치 ---------- */
+.coach-score b { font-family: var(--font-display); font-size: 1.5rem; color: var(--brand-ink); }
+.coach .meter { height: 10px; }
+.coach .meter i { background: var(--brand); }
+
+/* ---------- 리포트·점수 ---------- */
+.meter, .meter i { border-radius: 999px; }
+.w-row { border: 1px solid var(--line); background: var(--card); }
+.w-levels button { border-radius: 999px; }
+.w-max b { color: var(--brand-ink); font-family: var(--font-display); }
+.funnel li { border-bottom-style: solid; border-bottom-color: color-mix(in srgb, var(--line) 70%, transparent); }
+
+/* ---------- 입력 ---------- */
+input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="url"], select, .field textarea {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 14px;
+}
+.segmented button, .chip { transition: border-color .15s, background .15s; }
+.segmented button:hover, .chip:hover { border-color: color-mix(in srgb, var(--brand) 40%, var(--line)); }
+.segmented button.on, .chip.on { color: var(--brand-ink); }
+.progress i { background: var(--brand); }
+
+/* ---------- 채팅 ---------- */
+.chat-head { background: color-mix(in srgb, var(--app) 88%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.bubble { border-radius: 20px; box-shadow: none; border: 1px solid var(--line); }
+.msg.me .bubble { background: var(--brand); border-color: transparent; }
+.msg-system { background: color-mix(in srgb, var(--app) 80%, transparent); border: 1px solid var(--line); }
+.starters, .met-card { background: var(--card); border: 1px solid var(--line); }
+.st-chip { background: var(--sunk); border-color: transparent; }
+.composer { background: color-mix(in srgb, var(--app) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.composer textarea { background: var(--card); border-color: var(--line); }
+.send { background: var(--brand); box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 35%, transparent); }
+.date-ideas { border: 1px solid var(--line); box-shadow: var(--shadow-lg); }
+.chat-row { border-radius: 16px; padding: 12px 10px; border-bottom: 0; transition: background .15s; }
+.chat-row:hover { background: var(--sunk); }
+.chat-list { gap: 4px; }
+
+/* 다크 모드에서 장미색 바탕 위 글자는 어둡게 */
+@media (prefers-color-scheme: dark) {
+  .btn.primary, .msg.me .bubble, .send, .brand-mark, .logo, .stack-heart, .match-heart, .badge-dot { color: #1a0e12; }
+}
+
+/* ---------- 매칭 성공 ---------- */
+.match-card { border-radius: 30px; box-shadow: var(--shadow-lg); }
+.match-title { font-size: 2rem; color: var(--brand-ink); }
+.match-heart { background: var(--brand); }
+
+/* ---------- 하단 탭: 떠 있는 막대 ---------- */
+.tabbar {
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  width: calc(100% - 24px);
+  max-width: 416px;
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+  border-radius: 22px;
+  padding: 6px;
+  background: color-mix(in srgb, var(--app) 86%, transparent);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-lg);
+}
+.tabbar button { border-radius: 16px; padding: 7px 4px; transition: background .15s, color .15s; }
+.tabbar button.on { background: var(--brand-soft); color: var(--brand-ink); }
+.main .content { padding-bottom: 112px; }
+.toast { bottom: 100px; border-radius: 14px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .chip, .segmented button, .chat-row, .tabbar button { transition: none; }
+}
+
+/* =====================================================================
+   움직임: 화면이 처음 열릴 때(.enter), 새로 생긴 것(.pop, .reveal), 매칭 축하(.burst)에만 붙는다.
+   '동작 줄이기'를 켠 사용자에게는 아무것도 움직이지 않는다.
+   ===================================================================== */
+@property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
+.match-card { position: relative; }
+.burst { display: none; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ---------- 화면 등장: 위에서부터 차례로 떠오른다 ---------- */
+  .enter .content > *, .enter .fields > *, .enter .detail-photo, .enter .messages, .enter .welcome .hero, .enter.welcome .hero {
+    animation: rise .55s cubic-bezier(.2, .8, .2, 1) both;
+  }
+  .enter .content > *:nth-child(2), .enter .fields > *:nth-child(2) { animation-delay: .05s; }
+  .enter .content > *:nth-child(3), .enter .fields > *:nth-child(3) { animation-delay: .1s; }
+  .enter .content > *:nth-child(4), .enter .fields > *:nth-child(4) { animation-delay: .15s; }
+  .enter .content > *:nth-child(5), .enter .fields > *:nth-child(5) { animation-delay: .2s; }
+  .enter .content > *:nth-child(6), .enter .fields > *:nth-child(6) { animation-delay: .25s; }
+  .enter .content > *:nth-child(n+7), .enter .fields > *:nth-child(n+7) { animation-delay: .3s; }
+  .enter .grid li { animation: rise .55s cubic-bezier(.2, .8, .2, 1) both; }
+  .enter .grid li:nth-child(1) { animation-delay: .18s; }
+  .enter .grid li:nth-child(2) { animation-delay: .24s; }
+  .enter .grid li:nth-child(3) { animation-delay: .3s; }
+  .enter .grid li:nth-child(n+4) { animation-delay: .36s; }
+
+  /* 1위 사진은 살짝 당겨 들어온다 */
+  .enter .hero-photo .photo img, .enter .detail-photo .photo img { animation: settle 1.6s cubic-bezier(.2, .8, .2, 1) both; }
+
+  /* ---------- 점수: 원이 채워지고 막대가 차오른다 ---------- */
+  .enter .ring { animation: ring-fill 1s cubic-bezier(.2, .8, .2, 1) .15s both; }
+  .enter .meter i, .enter .mr-bar i { transform-origin: left center; animation: grow .9s cubic-bezier(.2, .8, .2, 1) .2s both; }
+  .enter .progress i { transition: none; animation: grow .5s ease-out both; transform-origin: left center; }
+
+  /* ---------- 하단 탭: 고른 아이콘이 통통 ---------- */
+  .enter .tabbar button.on .tab-icon { display: inline-block; animation: hop .5s cubic-bezier(.3, 1.6, .5, 1); }
+
+  /* ---------- 채팅: 새 메시지만 톡 ---------- */
+  .pop { animation: pop-in .38s cubic-bezier(.2, .9, .3, 1.25) both; }
+  .msg.me.pop { transform-origin: bottom right; }
+  .msg.them.pop { transform-origin: bottom left; }
+  .msg-system.pop { animation-name: rise; }
+  .typing { animation: pop-in .3s ease-out both; }
+
+  /* ---------- 펼쳐지는 결과: AI 상담, 데이트 제안 ---------- */
+  .reveal { animation: rise .45s cubic-bezier(.2, .8, .2, 1) both; }
+  .reveal .cs-changes li, .reveal .date-idea, .reveal .cs-rank { animation: rise .45s cubic-bezier(.2, .8, .2, 1) both; }
+  .reveal .cs-changes li:nth-child(2), .reveal .date-idea:nth-of-type(2) { animation-delay: .07s; }
+  .reveal .cs-changes li:nth-child(3), .reveal .date-idea:nth-of-type(3) { animation-delay: .14s; }
+  .reveal .cs-changes li:nth-child(n+4) { animation-delay: .2s; }
+  .reveal .cs-rank:last-child { animation-delay: .25s; }
+
+  /* ---------- 매칭 성공: 아래 '매칭 성공 연출'에서 순서대로 움직인다. 여기는 하트 조각만 ---------- */
+  .burst { display: block; position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+  .burst i {
+    position: absolute; left: 50%; top: 42%;
+    font-style: normal; font-size: 1.15rem; color: var(--brand);
+    opacity: 0; animation: burst 1s cubic-bezier(.1, .7, .3, 1) calc(.25s + var(--d)) both;
+  }
+  .burst i:nth-child(3n) { color: var(--brand-2); font-size: .85rem; }
+  .burst i:nth-child(4n) { color: var(--c-looks); font-size: .75rem; }
+
+  /* ---------- 첫 화면: 사진 카드가 천천히 떠다닌다 ---------- */
+  .stack-card.c0 { animation: float-0 7s ease-in-out infinite; }
+  .stack-card.c1 { animation: float-1 6s ease-in-out infinite; }
+  .stack-card.c2 { animation: float-2 7.5s ease-in-out infinite; }
+  .stack-heart { animation: beat-c 1.8s ease-in-out infinite; }
+  .pulse { animation-duration: 1.2s; }
+
+  /* ---------- 손에 닿는 반응 ---------- */
+  .pcard { transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s; }
+  .pcard:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .btn.primary:hover { transform: translateY(-1px); }
+  .btn:disabled { animation: breathe 1.2s ease-in-out infinite; }
+  .note-btn, .st-chip, .date-btn { transition: background .15s, border-color .15s, transform .12s; }
+  .note-btn:active, .st-chip:active, .date-btn:active, .chip:active { transform: scale(.97); }
+}
+
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+@keyframes pop-in { from { opacity: 0; transform: translateY(8px) scale(.94); } }
+@keyframes settle { from { transform: scale(1.08); } }
+@keyframes ring-fill { from { --p: 0; } }
+@keyframes grow { from { transform: scaleX(0); } }
+@keyframes hop { 40% { transform: translateY(-5px) scale(1.15); } }
+@keyframes breathe { 50% { opacity: .45; } }
+@keyframes match-in { from { opacity: 0; transform: scale(.82) translateY(16px); } }
+@keyframes beat { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25); } 60% { transform: scale(.95); } }
+@keyframes burst {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(0) scale(.3); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--a)) translateY(calc(-1 * var(--r))) scale(1); }
+}
+/* 첫 화면 카드는 원래 기울기와 위치를 지키며 위아래로만 흔들린다 */
+@keyframes float-0 { 0%, 100% { transform: translateX(-110%) rotate(-9deg); } 50% { transform: translateX(-110%) translateY(-8px) rotate(-11deg); } }
+@keyframes float-1 { 0%, 100% { transform: translateX(-50%); } 50% { transform: translateX(-50%) translateY(-10px); } }
+@keyframes float-2 { 0%, 100% { transform: translateX(10%) rotate(9deg); } 50% { transform: translateX(10%) translateY(-7px) rotate(11deg); } }
+@keyframes beat-c { 0%, 100% { transform: translateX(-50%) scale(1); } 15% { transform: translateX(-50%) scale(1.14); } 30% { transform: translateX(-50%) scale(.98); } 45% { transform: translateX(-50%) scale(1.08); } }
+
+/* =====================================================================
+   매칭 성공 연출: 어둠 → 두 사진 충돌(0.7초) → 섬광·충격파·꽃가루 → 글자 → 점수 → 버튼
+   움직임이 없는 사용자에게도 같은 화면이 완성된 모습으로 보인다.
+   ===================================================================== */
+.match-overlay {
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--brand) 55%, #2a0712) 0, #16060b 58%, #0b0306 100%);
+  backdrop-filter: none;
+}
+.match-overlay .rays {
+  position: absolute; inset: -60%;
+  background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255, 220, 230, .09) 0deg 7deg, transparent 7deg 20deg);
+  -webkit-mask: radial-gradient(circle at 50% 50%, #000 0, transparent 55%);
+  mask: radial-gradient(circle at 50% 50%, #000 0, transparent 55%);
+  pointer-events: none;
+}
+.match-overlay .confetti { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.match-overlay .match-card {
+  z-index: 2; max-width: 360px; padding: 30px 22px 18px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 30px 90px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+.match-kicker { margin: 0; font-size: .78rem; letter-spacing: .12em; color: var(--muted); }
+.match-overlay .match-title { font-size: 2.4rem; line-height: 1.15; text-shadow: 0 0 28px color-mix(in srgb, var(--brand) 35%, transparent); }
+.match-title span { display: inline-block; }
+.match-overlay .match-photos { margin: 14px 0 6px; }
+.match-overlay .match-photos .photo.md { width: 104px; height: 104px; }
+.match-overlay .match-heart { position: relative; width: 48px; height: 48px; font-size: 1.3rem; box-shadow: 0 0 24px color-mix(in srgb, var(--brand) 60%, transparent); }
+.match-heart .wave { position: absolute; inset: -3px; border-radius: 50%; border: 2px solid var(--brand); opacity: 0; pointer-events: none; }
+.match-score { margin: 0; font-size: 1rem; color: var(--muted); }
+.match-score b { font-family: var(--font-display); font-size: 2rem; color: var(--brand-ink); font-variant-numeric: tabular-nums; margin: 0 2px; }
+.match-line { font-weight: 600; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .celebrate .rays { animation: rays-in 1.2s ease-out both, spin 24s linear infinite; }
+  .celebrate .match-card { animation: match-in .6s cubic-bezier(.2, 1.4, .4, 1) both, impact .45s ease-out .7s; }
+  .celebrate::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+    background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, .7), transparent 55%);
+    opacity: 0; animation: flash .8s ease-out .68s both;
+  }
+  .celebrate .match-kicker { animation: rise .5s ease-out .35s both; }
+  .celebrate .match-title span { animation: letter-in .55s cubic-bezier(.2, 1.6, .4, 1) calc(.6s + var(--i) * .06s) both; }
+  .celebrate .match-photos .photo:first-child { animation: fly-l .7s cubic-bezier(.5, 0, .2, 1.15) .1s both; }
+  .celebrate .match-photos .photo:last-child { animation: fly-r .7s cubic-bezier(.5, 0, .2, 1.15) .1s both; }
+  .celebrate .match-heart { animation: heart-pop .6s cubic-bezier(.2, 1.8, .4, 1) .68s both, beat 1.2s ease-in-out 1.5s 3; }
+  .celebrate .match-heart .wave { animation: shock 1.3s ease-out .72s both; }
+  .celebrate .match-heart .wave.w2 { animation-delay: .95s; }
+  .celebrate .match-score { animation: rise .5s ease-out 1s both; }
+  .celebrate .match-line { animation: rise .5s ease-out 1.2s both; }
+  .celebrate .match-card > small { animation: rise .5s ease-out 1.3s both; }
+  .celebrate .match-card > .btn, .celebrate .match-card > .link { animation: rise .5s ease-out 1.45s both; }
+  .celebrate .burst i { animation-delay: calc(.7s + var(--d)); animation-duration: 1.2s; font-size: 1.4rem; }
+}
+
+@keyframes rays-in { from { opacity: 0; transform: scale(.6); } }
+@keyframes spin { to { rotate: 360deg; } }
+@keyframes impact { 30% { transform: scale(1.035); } 60% { transform: scale(.99); } }
+@keyframes flash { 15% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes letter-in { from { opacity: 0; transform: translateY(26px) scale(.5) rotate(-10deg); } }
+@keyframes fly-l { 0% { opacity: 0; transform: translateX(-170px) rotate(-18deg) scale(.8); } 70% { opacity: 1; transform: translateX(10px) rotate(3deg) scale(1.04); } }
+@keyframes fly-r { 0% { opacity: 0; transform: translateX(170px) rotate(18deg) scale(.8); } 70% { opacity: 1; transform: translateX(-10px) rotate(-3deg) scale(1.04); } }
+@keyframes heart-pop { 0% { transform: scale(0); } 60% { transform: scale(1.45); } }
+@keyframes shock { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(4); } }
+
+/* 매칭 팝업이 떠 있는 동안 뒤 화면은 스크롤하지 않는다 */
+body:has(.match-overlay) { overflow: hidden; }

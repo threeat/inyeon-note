@@ -4,7 +4,9 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
-    "embeddings": "node scripts/build-embeddings.mjs"
+    "embeddings": "node scripts/build-embeddings.mjs",
+    "ai-server": "node server/ai-server.mjs",
+    "ai-public": "node server/ai-public.mjs"
   },
   "devDependencies": {
     "@huggingface/transformers": "4.3.1"

@@ -302,14 +302,19 @@
   }
 
   // ---------- 매칭: 관심을 보냈을 때 상대가 수락하는지 ----------
-  function matchResult(scored) {
-    const { threshold } = Rules.MATCH_RULE;
+  // withNote: 질문 카드나 자기소개에 한마디를 남기며 보낸 관심이면 기준을 noteBonus만큼 낮춘다
+  function matchResult(scored, opts) {
+    const { threshold: base, noteBonus } = Rules.MATCH_RULE;
+    const withNote = Boolean(opts && opts.withNote);
+    const threshold = withNote ? base - noteBonus : base;
     const matched = scored.total >= threshold;
+    const why = withNote ? ` (한마디를 남겨 기준이 ${base}점에서 ${threshold}점으로 낮아졌어요)` : '';
     return {
       matched,
+      threshold,
       reason: matched
-        ? `궁합 ${scored.total}점 ≥ ${threshold}점이라 ${scored.profile.name}님도 수락했어요.`
-        : `궁합 ${scored.total}점 < ${threshold}점이라 ${scored.profile.name}님이 아직 답하지 않았어요.`,
+        ? `궁합 ${scored.total}점 ≥ ${threshold}점이라 ${scored.profile.name}님도 수락했어요.${why}`
+        : `궁합 ${scored.total}점 < ${threshold}점이라 ${scored.profile.name}님이 아직 답하지 않았어요.${why}`,
     };
   }
 
